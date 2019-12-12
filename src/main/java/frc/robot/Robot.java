@@ -7,7 +7,13 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+
+import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -23,7 +29,31 @@ public class Robot extends TimedRobot {
     private static final String kCustomAuto = "My Auto";
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
+
+    static final int LeftMasterID = 2;
+	static final int LeftSlaveID = 3;
+
+	static final int RightMasterID = 4;
+	static final int RightSlaveID = 5;
     
+    XboxController xboxController = new XboxController(0);
+    double leftjoyY;
+    double rightjoyY;
+    double leftjoyX;
+    double rightjoyX;
+    boolean ArcadeDrive = true;
+
+    static final int START = 7;
+    static final int SELECT = 8;
+    boolean start;
+    boolean select;
+
+
+    TalonSRX leftMaster = new TalonSRX(LeftMasterID);
+	TalonSRX leftSlave = new TalonSRX(LeftSlaveID);
+	TalonSRX rightMaster = new TalonSRX(RightMasterID);
+	TalonSRX rightSlave = new TalonSRX(RightSlaveID);
+
     /**
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
@@ -33,6 +63,7 @@ public class Robot extends TimedRobot {
         m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
+        System.out.println("this is to test the drbug console and robotInit()");
     }
     
     /**
@@ -82,10 +113,63 @@ public class Robot extends TimedRobot {
     }
     
     /**
+     * This function is called periodically during teleop.
+     */
+    @Override
+    public void teleopInit() {
+        /* Ensure motor output is neutral during init */
+		leftMaster.set(ControlMode.PercentOutput, 0);
+		rightMaster.set(ControlMode.PercentOutput, 0);        
+
+		/* Factory Default all hardware to prevent unexpected behaviour */
+		leftMaster.configFactoryDefault();
+        leftSlave.configFactoryDefault();
+		rightMaster.configFactoryDefault();
+		rightSlave.configFactoryDefault();
+		
+		/* Set Neutral mode */
+		leftMaster.setNeutralMode(NeutralMode.Brake);
+		leftSlave.setNeutralMode(NeutralMode.Brake);
+		rightMaster.setNeutralMode(NeutralMode.Brake);
+		rightSlave.setNeutralMode(NeutralMode.Brake);
+		
+		/* Configure output direction */
+		leftMaster.setInverted(false);
+        leftSlave.setInverted(false);
+		rightMaster.setInverted(false);
+        leftSlave.setInverted(false);
+
+        rightSlave.set(ControlMode.Follower, RightMasterID);
+		leftSlave.set(ControlMode.Follower, LeftMasterID);
+    }
+
+
+    /**
      * This function is called periodically during operator control.
      */
     @Override
     public void teleopPeriodic() {
+        leftjoyY = xboxController.getY(GenericHID.Hand.kLeft);
+        rightjoyY = xboxController.getY(GenericHID.Hand.kRight);
+        leftjoyX = xboxController.getX(GenericHID.Hand.kLeft);
+        rightjoyX = xboxController.getX(GenericHID.Hand.kRight);
+        start = xboxController.getRawButton(START);
+        select = xboxController.getRawButton(SELECT);
+        if (start) {
+            ArcadeDrive = true;
+        }
+        if (select) {
+            ArcadeDrive = false;
+        }
+
+        if (ArcadeDrive) {
+            leftMaster.set(ControlMode.PercentOutput, -(leftjoyY - leftjoyX)/2);
+		    rightMaster.set(ControlMode.PercentOutput, (leftjoyY + leftjoyX)/2);
+        } else {
+            leftMaster.set(ControlMode.PercentOutput, -leftjoyY);
+		    rightMaster.set(ControlMode.PercentOutput, rightjoyY);
+        }
+
     }
     
     /**
