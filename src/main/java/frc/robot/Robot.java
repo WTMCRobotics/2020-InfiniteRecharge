@@ -81,25 +81,9 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
         System.out.println("this is to test the drbug console and robotInit()");
+
         drawbridge = new TwoStateMotor(-1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
         hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
-    }
-    
-    /**
-     * This function is called every robot packet, no matter the mode. Use
-     * this for items like diagnostics that you want ran during disabled,
-     * autonomous, teleoperated and test.
-     *
-     * <p>This runs after the mode specific periodic functions, but before
-     * LiveWindow and SmartDashboard integrated updating.
-     */
-    @Override
-    public void robotPeriodic() {
-        drawbridge.set(drawbridgeButton);
-        drawbridge.tick();
-
-        hang.set(hangButton);
-        hang.tick();
 
         /* Ensure motor output is neutral during init */
 		leftMaster.set(ControlMode.PercentOutput, 0);
@@ -125,6 +109,23 @@ public class Robot extends TimedRobot {
 
         rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
 		leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
+    }
+    
+    /**
+     * This function is called every robot packet, no matter the mode. Use
+     * this for items like diagnostics that you want ran during disabled,
+     * autonomous, teleoperated and test.
+     *
+     * <p>This runs after the mode specific periodic functions, but before
+     * LiveWindow and SmartDashboard integrated updating.
+     */
+    @Override
+    public void robotPeriodic() {
+        drawbridge.set(drawbridgeButton);
+        drawbridge.tick();
+
+        hang.set(hangButton);
+        hang.tick();
     }
     
     /**
