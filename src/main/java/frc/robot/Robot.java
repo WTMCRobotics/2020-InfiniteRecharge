@@ -30,16 +30,19 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
-    static final int LeftMasterID = 2;
-	static final int LeftSlaveID = 3;
+    static final int LEFT_MASTER_ID = 2;
+	static final int LEFT_SLAVE_ID = 3;
 
-	static final int RightMasterID = 4;
-    static final int RightSlaveID = 5;
+	static final int RIGHT_MASTER_ID = 4;
+    static final int RIGHT_SLAVE_ID = 5;
     
-    static final int drawbridgeMotorID = 6;
+    static final int DRAWBRIDGE_MOTOR_ID = 6;
+    static final int WINCH_MOTOR_ID = 7;
 
     static final int DRAWBRIDGE_SET_SENSOR = 3;
     static final int DRAWBRIDGE_DEFAULT_SENSOR = 4;
+    static final int HANG_SET_SENSOR = 1;
+    static final int HANG_DEFAULT_SENSOR = 2;
     
     XboxController xboxController = new XboxController(0);
     double leftjoyY;
@@ -51,18 +54,22 @@ public class Robot extends TimedRobot {
     static final int START = 7;
     static final int SELECT = 8;
     static final int R_SHOULDER = 6;
+    static final int L_SHOULDER = 5;
     boolean start;
     boolean select;
     boolean drawbridgeButton;
+    boolean hangButton;
 
 
-    TalonSRX leftMaster = new TalonSRX(LeftMasterID);
-	TalonSRX leftSlave = new TalonSRX(LeftSlaveID);
-	TalonSRX rightMaster = new TalonSRX(RightMasterID);
-    TalonSRX rightSlave = new TalonSRX(RightSlaveID);
-    TalonSRX drawbridgeMotor = new TalonSRX(drawbridgeMotorID);
+    TalonSRX leftMaster = new TalonSRX(LEFT_MASTER_ID);
+	TalonSRX leftSlave = new TalonSRX(LEFT_SLAVE_ID);
+	TalonSRX rightMaster = new TalonSRX(RIGHT_MASTER_ID);
+    TalonSRX rightSlave = new TalonSRX(RIGHT_SLAVE_ID);
+    TalonSRX drawbridgeMotor = new TalonSRX(DRAWBRIDGE_MOTOR_ID);
+    TalonSRX hangMotor = new TalonSRX(WINCH_MOTOR_ID);
     
-    SettableMotor drawbridge;
+    TwoStateMotor drawbridge;
+    TwoStateMotor hang;
 
     /**
      * This function is run when the robot is first started up and should be
@@ -74,7 +81,8 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
         System.out.println("this is to test the drbug console and robotInit()");
-        drawbridge = new SettableMotor(-1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
+        drawbridge = new TwoStateMotor(-1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
+        hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
     }
     
     /**
@@ -89,6 +97,9 @@ public class Robot extends TimedRobot {
     public void robotPeriodic() {
         drawbridge.set(drawbridgeButton);
         drawbridge.tick();
+
+        hang.set(hangButton);
+        hang.tick();
 
         /* Ensure motor output is neutral during init */
 		leftMaster.set(ControlMode.PercentOutput, 0);
@@ -112,8 +123,8 @@ public class Robot extends TimedRobot {
 		rightMaster.setInverted(false);
         leftSlave.setInverted(false);
 
-        rightSlave.set(ControlMode.Follower, RightMasterID);
-		leftSlave.set(ControlMode.Follower, LeftMasterID);
+        rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
+		leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
     }
     
     /**
@@ -170,6 +181,7 @@ public class Robot extends TimedRobot {
         start = xboxController.getRawButton(START);
         select = xboxController.getRawButton(SELECT);
         drawbridgeButton = xboxController.getRawButton(R_SHOULDER);
+        hangButton = xboxController.getRawButton(L_SHOULDER);
         if (start) {
             ArcadeDrive = true;
         }
