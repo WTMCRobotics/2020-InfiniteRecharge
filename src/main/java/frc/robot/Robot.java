@@ -10,7 +10,6 @@ package frc.robot;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
@@ -30,21 +29,32 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+    // Canbus ID's. Can be found in Phoenix Tuner
     static final int LEFT_MASTER_ID = 2;
-	static final int LEFT_SLAVE_ID = 3;
+    static final int LEFT_SLAVE_ID = 3;
 
-	static final int RIGHT_MASTER_ID = 4;
+    static final int RIGHT_MASTER_ID = 4;
     static final int RIGHT_SLAVE_ID = 5;
-    
-    static final int DRAWBRIDGE_MOTOR_ID = 6;
+
+    static final int DRAWBRIDGE_MOTOR_ID = 11;
     static final int WINCH_MOTOR_ID = 7;
 
-    static final int DRAWBRIDGE_SET_SENSOR = 3;
-    static final int DRAWBRIDGE_DEFAULT_SENSOR = 4;
-    static final int HANG_SET_SENSOR = 1;
-    static final int HANG_DEFAULT_SENSOR = 2;
-    
+    static final int INTAKE_ID = 12;
+
+    static final int DRAWBRIDGE_SET_SENSOR = 0;
+    static final int DRAWBRIDGE_DEFAULT_SENSOR = 1;
+    static final int HANG_SET_SENSOR = 2;
+    static final int HANG_DEFAULT_SENSOR = 3;
+
+    /*
+     * It changes the speed of power cell intake motor. Accepts values between 1 and
+     * -1.
+     */
+    static final double INTAKE_SPEED_IN = 1;
+    static final double INTAKE_SPEED_OUT = -1;
+
     XboxController xboxController = new XboxController(0);
+    XboxController gHeroController = new XboxController(1);
     double leftjoyY;
     double rightjoyY;
     double leftjoyX;
@@ -59,21 +69,23 @@ public class Robot extends TimedRobot {
     boolean select;
     boolean drawbridgeButton;
     boolean hangButton;
-
+    boolean lTrigger;
+    boolean rTrigger;
 
     TalonSRX leftMaster = new TalonSRX(LEFT_MASTER_ID);
-	TalonSRX leftSlave = new TalonSRX(LEFT_SLAVE_ID);
-	TalonSRX rightMaster = new TalonSRX(RIGHT_MASTER_ID);
+    TalonSRX leftSlave = new TalonSRX(LEFT_SLAVE_ID);
+    TalonSRX rightMaster = new TalonSRX(RIGHT_MASTER_ID);
     TalonSRX rightSlave = new TalonSRX(RIGHT_SLAVE_ID);
     TalonSRX drawbridgeMotor = new TalonSRX(DRAWBRIDGE_MOTOR_ID);
     TalonSRX hangMotor = new TalonSRX(WINCH_MOTOR_ID);
-    
+    TalonSRX intake = new TalonSRX(INTAKE_ID);
+
     TwoStateMotor drawbridge;
     TwoStateMotor hang;
 
     /**
-     * This function is run when the robot is first started up and should be
-     * used for any initialization code.
+     * This function is run when the robot is first started up and should be used
+     * for any initialization code.
      */
     @Override
     public void robotInit() {
@@ -82,42 +94,44 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", m_chooser);
         System.out.println("this is to test the drbug console and robotInit()");
 
-        drawbridge = new TwoStateMotor(-1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
+        drawbridge = new TwoStateMotor((float) 0.4, (float) -0.1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR,
+                DRAWBRIDGE_SET_SENSOR);
         hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
 
         /* Ensure motor output is neutral during init */
-		leftMaster.set(ControlMode.PercentOutput, 0);
-		rightMaster.set(ControlMode.PercentOutput, 0);        
+        leftMaster.set(ControlMode.PercentOutput, 0);
+        rightMaster.set(ControlMode.PercentOutput, 0);
 
-		/* Factory Default all hardware to prevent unexpected behaviour */
-		leftMaster.configFactoryDefault();
+        /* Factory Default all hardware to prevent unexpected behaviour */
+        leftMaster.configFactoryDefault();
         leftSlave.configFactoryDefault();
-		rightMaster.configFactoryDefault();
-		rightSlave.configFactoryDefault();
-		
-		/* Set Neutral mode */
-		leftMaster.setNeutralMode(NeutralMode.Brake);
-		leftSlave.setNeutralMode(NeutralMode.Brake);
-		rightMaster.setNeutralMode(NeutralMode.Brake);
-		rightSlave.setNeutralMode(NeutralMode.Brake);
-		
-		/* Configure output direction */
-		leftMaster.setInverted(false);
+        rightMaster.configFactoryDefault();
+        rightSlave.configFactoryDefault();
+
+        /* Set Neutral mode */
+        leftMaster.setNeutralMode(NeutralMode.Brake);
+        leftSlave.setNeutralMode(NeutralMode.Brake);
+        rightMaster.setNeutralMode(NeutralMode.Brake);
+        rightSlave.setNeutralMode(NeutralMode.Brake);
+
+        /* Configure output direction */
+        leftMaster.setInverted(false);
         leftSlave.setInverted(false);
-		rightMaster.setInverted(false);
+        rightMaster.setInverted(false);
         leftSlave.setInverted(false);
 
         rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
-		leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
+        leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
     }
-    
+
     /**
-     * This function is called every robot packet, no matter the mode. Use
-     * this for items like diagnostics that you want ran during disabled,
-     * autonomous, teleoperated and test.
+     * This function is called every robot packet, no matter the mode. Use this for
+     * items like diagnostics that you want ran during disabled, autonomous,
+     * teleoperated and test.
      *
-     * <p>This runs after the mode specific periodic functions, but before
-     * LiveWindow and SmartDashboard integrated updating.
+     * <p>
+     * This runs after the mode specific periodic functions, but before LiveWindow
+     * and SmartDashboard integrated updating.
      */
     @Override
     public void robotPeriodic() {
@@ -127,17 +141,18 @@ public class Robot extends TimedRobot {
         hang.set(hangButton);
         hang.tick();
     }
-    
+
     /**
      * This autonomous (along with the chooser code above) shows how to select
-     * between different autonomous modes using the dashboard. The sendable
-     * chooser code works with the Java SmartDashboard. If you prefer the
-     * LabVIEW Dashboard, remove all of the chooser code and uncomment the
-     * getString line to get the auto name from the text box below the Gyro
+     * between different autonomous modes using the dashboard. The sendable chooser
+     * code works with the Java SmartDashboard. If you prefer the LabVIEW Dashboard,
+     * remove all of the chooser code and uncomment the getString line to get the
+     * auto name from the text box below the Gyro
      *
-     * <p>You can add additional auto modes by adding additional comparisons to
-     * the switch structure below with additional strings. If using the
-     * SendableChooser make sure to add them to the chooser code above as well.
+     * <p>
+     * You can add additional auto modes by adding additional comparisons to the
+     * switch structure below with additional strings. If using the SendableChooser
+     * make sure to add them to the chooser code above as well.
      */
     @Override
     public void autonomousInit() {
@@ -145,30 +160,29 @@ public class Robot extends TimedRobot {
         // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
         System.out.println("Auto selected: " + m_autoSelected);
     }
-    
+
     /**
      * This function is called periodically during autonomous.
      */
     @Override
     public void autonomousPeriodic() {
         switch (m_autoSelected) {
-            case kCustomAuto:
+        case kCustomAuto:
             // Put custom auto code here
             break;
-            case kDefaultAuto:
-            default:
+        case kDefaultAuto:
+        default:
             // Put default auto code here
             break;
         }
     }
-    
+
     /**
      * This function is called periodically during teleop.
      */
     @Override
     public void teleopInit() {
     }
-
 
     /**
      * This function is called periodically during operator control.
@@ -181,8 +195,11 @@ public class Robot extends TimedRobot {
         rightjoyX = xboxController.getX(GenericHID.Hand.kRight);
         start = xboxController.getRawButton(START);
         select = xboxController.getRawButton(SELECT);
-        drawbridgeButton = xboxController.getRawButton(R_SHOULDER);
-        hangButton = xboxController.getRawButton(L_SHOULDER);
+        lTrigger = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
+        rTrigger = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
+        drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
+        hangButton = 0.75 < gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
+
         if (start) {
             ArcadeDrive = true;
         }
@@ -191,14 +208,22 @@ public class Robot extends TimedRobot {
         }
 
         if (ArcadeDrive) {
-            leftMaster.set(ControlMode.PercentOutput, -(leftjoyY - leftjoyX)/2);
-		    rightMaster.set(ControlMode.PercentOutput, (leftjoyY + leftjoyX)/2);
+            leftMaster.set(ControlMode.PercentOutput, -(leftjoyY - rightjoyX) / 2);
+            rightMaster.set(ControlMode.PercentOutput, (leftjoyY + rightjoyX) / 2);
         } else {
             leftMaster.set(ControlMode.PercentOutput, -leftjoyY);
-		    rightMaster.set(ControlMode.PercentOutput, rightjoyY);
+            rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
+        if (rTrigger) {
+            intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
+        } else if (lTrigger) {
+            intake.set(ControlMode.PercentOutput, INTAKE_SPEED_IN);
+        } else {
+            intake.set(ControlMode.PercentOutput, 0);
+        }
+
     }
-    
+
     /**
      * This function is called periodically during test mode.
      */
