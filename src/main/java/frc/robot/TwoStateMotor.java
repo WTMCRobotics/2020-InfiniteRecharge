@@ -21,7 +21,8 @@ class TwoStateMotor {
         this.motor.setNeutralMode(NeutralMode.Brake);
     }
 
-
+    //this method should be called in robot periodic
+    //checks sensor values and motor speed
     void tick(){
 
         isDefault =  defaultSensor.get();
