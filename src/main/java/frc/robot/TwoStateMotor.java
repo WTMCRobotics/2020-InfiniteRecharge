@@ -7,11 +7,14 @@ import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import edu.wpi.first.wpilibj.DigitalInput;
 
 class TwoStateMotor {
-    float speed;
-    TalonSRX motor;
-    DigitalInput defaultSensor, setSensor;
-    boolean isDefault, isSet;
-    int direction;
+    float speed; //the speed that the motor should travel at
+    float speedOffset = 0; //used to combat gravity, positive values cause faster sets and slower unsets
+    TalonSRX motor; //the motor to be controlled
+    DigitalInput defaultSensor; //the sensor that will be true when the motor is in the default position
+    DigitalInput setSensor; //the sensor that will be true when the motor is in the set position
+    boolean isDefault; //the state of the default Sensor
+    boolean isSet; //the state of the set Sensor
+    int direction; //the target direction 1 for set and -1 for normal
 
     TwoStateMotor (float speed, TalonSRX motor, int defaultSensor, int setSensor){
         this.speed = speed;
@@ -21,6 +24,11 @@ class TwoStateMotor {
         this.motor.setNeutralMode(NeutralMode.Brake);
     }
 
+    TwoStateMotor (float speed, float speedOffset, TalonSRX motor, int defaultSensor, int setSensor){
+        this(speed, motor, defaultSensor, setSensor);
+        this.speedOffset = speedOffset;
+    }
+
     //this method should be called in robot periodic
     //checks sensor values and motor speed
     void tick(){
@@ -28,8 +36,8 @@ class TwoStateMotor {
         isDefault =  defaultSensor.get();
         isSet =  setSensor.get();
         if(isSet && direction == 1 || isDefault && direction == -1) {
-            motor.set(ControlMode.PercentOutput, direction * speed);
-            System.out.println("moving at "+direction * speed);
+            motor.set(ControlMode.PercentOutput, (direction * speed) + speedOffset);
+            System.out.println("moving at "+ ((direction * speed) + speedOffset));
         } else {
             motor.set(ControlMode.PercentOutput, 0);
             System.out.println("stopped");
