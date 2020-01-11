@@ -34,7 +34,12 @@ public class Robot extends TimedRobot {
 	static final int LeftSlaveID = 3;
 
 	static final int RightMasterID = 4;
-	static final int RightSlaveID = 5;
+    static final int RightSlaveID = 5;
+    
+    static final int drawbridgeMotorID = 6;
+
+    static final int DRAWBRIDGE_SET_SENSOR = 3;
+    static final int DRAWBRIDGE_DEFAULT_SENSOR = 4;
     
     XboxController xboxController = new XboxController(0);
     double leftjoyY;
@@ -45,14 +50,19 @@ public class Robot extends TimedRobot {
 
     static final int START = 7;
     static final int SELECT = 8;
+    static final int R_SHOULDER = 6;
     boolean start;
     boolean select;
+    boolean drawbridgeButton;
 
 
     TalonSRX leftMaster = new TalonSRX(LeftMasterID);
 	TalonSRX leftSlave = new TalonSRX(LeftSlaveID);
 	TalonSRX rightMaster = new TalonSRX(RightMasterID);
-	TalonSRX rightSlave = new TalonSRX(RightSlaveID);
+    TalonSRX rightSlave = new TalonSRX(RightSlaveID);
+    TalonSRX drawbridgeMotor = new TalonSRX(drawbridgeMotorID);
+    
+    SettableMotor drawbridge;
 
     /**
      * This function is run when the robot is first started up and should be
@@ -64,6 +74,7 @@ public class Robot extends TimedRobot {
         m_chooser.addOption("My Auto", kCustomAuto);
         SmartDashboard.putData("Auto choices", m_chooser);
         System.out.println("this is to test the drbug console and robotInit()");
+        drawbridge = new SettableMotor(-1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
     }
     
     /**
@@ -76,6 +87,33 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+        drawbridge.set(drawbridgeButton);
+        drawbridge.tick();
+
+        /* Ensure motor output is neutral during init */
+		leftMaster.set(ControlMode.PercentOutput, 0);
+		rightMaster.set(ControlMode.PercentOutput, 0);        
+
+		/* Factory Default all hardware to prevent unexpected behaviour */
+		leftMaster.configFactoryDefault();
+        leftSlave.configFactoryDefault();
+		rightMaster.configFactoryDefault();
+		rightSlave.configFactoryDefault();
+		
+		/* Set Neutral mode */
+		leftMaster.setNeutralMode(NeutralMode.Brake);
+		leftSlave.setNeutralMode(NeutralMode.Brake);
+		rightMaster.setNeutralMode(NeutralMode.Brake);
+		rightSlave.setNeutralMode(NeutralMode.Brake);
+		
+		/* Configure output direction */
+		leftMaster.setInverted(false);
+        leftSlave.setInverted(false);
+		rightMaster.setInverted(false);
+        leftSlave.setInverted(false);
+
+        rightSlave.set(ControlMode.Follower, RightMasterID);
+		leftSlave.set(ControlMode.Follower, LeftMasterID);
     }
     
     /**
@@ -117,30 +155,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopInit() {
-        /* Ensure motor output is neutral during init */
-		leftMaster.set(ControlMode.PercentOutput, 0);
-		rightMaster.set(ControlMode.PercentOutput, 0);        
-
-		/* Factory Default all hardware to prevent unexpected behaviour */
-		leftMaster.configFactoryDefault();
-        leftSlave.configFactoryDefault();
-		rightMaster.configFactoryDefault();
-		rightSlave.configFactoryDefault();
-		
-		/* Set Neutral mode */
-		leftMaster.setNeutralMode(NeutralMode.Brake);
-		leftSlave.setNeutralMode(NeutralMode.Brake);
-		rightMaster.setNeutralMode(NeutralMode.Brake);
-		rightSlave.setNeutralMode(NeutralMode.Brake);
-		
-		/* Configure output direction */
-		leftMaster.setInverted(false);
-        leftSlave.setInverted(false);
-		rightMaster.setInverted(false);
-        leftSlave.setInverted(false);
-
-        rightSlave.set(ControlMode.Follower, RightMasterID);
-		leftSlave.set(ControlMode.Follower, LeftMasterID);
     }
 
 
@@ -155,6 +169,7 @@ public class Robot extends TimedRobot {
         rightjoyX = xboxController.getX(GenericHID.Hand.kRight);
         start = xboxController.getRawButton(START);
         select = xboxController.getRawButton(SELECT);
+        drawbridgeButton = xboxController.getRawButton(R_SHOULDER);
         if (start) {
             ArcadeDrive = true;
         }
@@ -169,7 +184,6 @@ public class Robot extends TimedRobot {
             leftMaster.set(ControlMode.PercentOutput, -leftjoyY);
 		    rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
-
     }
     
     /**
