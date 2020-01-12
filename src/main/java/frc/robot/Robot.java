@@ -29,7 +29,7 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
-    // Canbus ID's. Can be found in Phoenix Tuner
+    // can bus IDs. Can be found in Phoenix Tuner
     static final int LEFT_MASTER_ID = 2;
     static final int LEFT_SLAVE_ID = 3;
 
@@ -41,37 +41,39 @@ public class Robot extends TimedRobot {
 
     static final int INTAKE_ID = 12;
 
+    // DIO
     static final int DRAWBRIDGE_SET_SENSOR = 0;
     static final int DRAWBRIDGE_DEFAULT_SENSOR = 1;
     static final int HANG_SET_SENSOR = 2;
     static final int HANG_DEFAULT_SENSOR = 3;
 
-    /*
-     * It changes the speed of power cell intake motor. Accepts values between 1 and
-     * -1.
-     */
+    // changes the speed of power cell intake motor. Accepts values between 1 and
+    // -1.
     static final double INTAKE_SPEED_IN = 1;
     static final double INTAKE_SPEED_OUT = -1;
 
-    XboxController xboxController = new XboxController(0);
-    XboxController gHeroController = new XboxController(1);
-    double leftjoyY;
-    double rightjoyY;
-    double leftjoyX;
-    double rightjoyX;
-    boolean ArcadeDrive = true;
+    XboxController xboxController = new XboxController(0); // driver
+    XboxController gHeroController = new XboxController(1); // co-driver
+    double leftjoyY; // y-axis of the left joystick on the driver's controller
+    double rightjoyY; // y-axis of the right joystick on the driver's controller
+    double leftjoyX; // x-axis of the left joystick on the driver's controller
+    double rightjoyX; // x-axis of the right joystick on the driver's controller
+    boolean ArcadeDrive = true; // variable stores weather to use Arcade or tank style controls
 
-    static final int START = 7;
-    static final int SELECT = 8;
-    static final int R_SHOULDER = 6;
-    static final int L_SHOULDER = 5;
-    boolean start;
-    boolean select;
-    boolean drawbridgeButton;
-    boolean hangButton;
-    boolean lTrigger;
-    boolean rTrigger;
+    static final int START = 7; // the mapping of the start button on a xbox controller
+    static final int SELECT = 8; // the mapping of the select button on a xbox controller
+    static final int R_SHOULDER = 6; // the mapping of the right shoulder on a xbox controller
+    static final int L_SHOULDER = 5; // the mapping of the left shoulder on a xbox controller
 
+    // these variables should be updated in teleopPeriodic()
+    boolean arcadeButton; // true if the button that selects arcade mode is pressed
+    boolean tankButton; // true if the button that selects tank mode is pressed
+    boolean drawbridgeButton; // true if the button that lowers the drawbridge is pressed
+    boolean hangButton; // true if the button that extends the hang mecanism is pressed
+    boolean intakeButton; // true if the button that intakes is pressed
+    boolean intakeOutButton; // true if the button that runs the intake in reverse is pressed
+
+    // creates objects for the talons
     TalonSRX leftMaster = new TalonSRX(LEFT_MASTER_ID);
     TalonSRX leftSlave = new TalonSRX(LEFT_SLAVE_ID);
     TalonSRX rightMaster = new TalonSRX(RIGHT_MASTER_ID);
@@ -80,6 +82,7 @@ public class Robot extends TimedRobot {
     TalonSRX hangMotor = new TalonSRX(WINCH_MOTOR_ID);
     TalonSRX intake = new TalonSRX(INTAKE_ID);
 
+    // declares objects for the TwoStateMotor class
     TwoStateMotor drawbridge;
     TwoStateMotor hang;
 
@@ -189,24 +192,27 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void teleopPeriodic() {
+
+         // this code updates the controller variables to the correct value at the begining of teleopPeriodic()
         leftjoyY = xboxController.getY(GenericHID.Hand.kLeft);
         rightjoyY = xboxController.getY(GenericHID.Hand.kRight);
         leftjoyX = xboxController.getX(GenericHID.Hand.kLeft);
         rightjoyX = xboxController.getX(GenericHID.Hand.kRight);
-        start = xboxController.getRawButton(START);
-        select = xboxController.getRawButton(SELECT);
-        lTrigger = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
-        rTrigger = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
+        arcadeButton = xboxController.getRawButton(START);
+        tankButton = xboxController.getRawButton(SELECT);
+        intakeOutButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
+        intakeButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         hangButton = 0.75 < gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
 
-        if (start) {
+        if (arcadeButton) {
             ArcadeDrive = true;
         }
-        if (select) {
+        if (tankButton) {
             ArcadeDrive = false;
         }
 
+        //this code sets the motors to the correct speed based on driver input
         if (ArcadeDrive) {
             leftMaster.set(ControlMode.PercentOutput, -(leftjoyY - rightjoyX) / 2);
             rightMaster.set(ControlMode.PercentOutput, (leftjoyY + rightjoyX) / 2);
@@ -214,9 +220,11 @@ public class Robot extends TimedRobot {
             leftMaster.set(ControlMode.PercentOutput, -leftjoyY);
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
-        if (rTrigger) {
+
+        //this code handles intake
+        if (intakeButton) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
-        } else if (lTrigger) {
+        } else if (intakeOutButton) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_IN);
         } else {
             intake.set(ControlMode.PercentOutput, 0);
