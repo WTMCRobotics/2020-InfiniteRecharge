@@ -193,7 +193,8 @@ public class Robot extends TimedRobot {
     @Override
     public void teleopPeriodic() {
 
-         // this code updates the controller variables to the correct value at the begining of teleopPeriodic()
+        // this code updates the controller variables to the correct value at the
+        // begining of teleopPeriodic()
         leftjoyY = xboxController.getY(GenericHID.Hand.kLeft);
         rightjoyY = xboxController.getY(GenericHID.Hand.kRight);
         leftjoyX = xboxController.getX(GenericHID.Hand.kLeft);
@@ -212,16 +213,18 @@ public class Robot extends TimedRobot {
             ArcadeDrive = false;
         }
 
-        //this code sets the motors to the correct speed based on driver input
+        // this code sets the motors to the correct speed based on driver input
         if (ArcadeDrive) {
-            leftMaster.set(ControlMode.PercentOutput, -(leftjoyY - rightjoyX) / 2);
-            rightMaster.set(ControlMode.PercentOutput, (leftjoyY + rightjoyX) / 2);
+            double x = rightjoyX;
+            double y = leftjoyY;
+            leftMaster.set(ControlMode.PercentOutput, (y * (2 - Math.abs(x)) - x * (2 - Math.abs(y))) / 2);
+            rightMaster.set(ControlMode.PercentOutput, -(y * (2 - Math.abs(x)) + x * (2 - Math.abs(y))) / 2);
         } else {
             leftMaster.set(ControlMode.PercentOutput, -leftjoyY);
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
 
-        //this code handles intake
+        // this code handles intake
         if (intakeButton) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
         } else if (intakeOutButton) {
