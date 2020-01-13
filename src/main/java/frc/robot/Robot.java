@@ -40,6 +40,7 @@ public class Robot extends TimedRobot {
     static final int WINCH_MOTOR_ID = 7;
 
     static final int INTAKE_ID = 12;
+    static final int POPPER_ID = 10;
 
     // DIO
     static final int DRAWBRIDGE_SET_SENSOR = 0;
@@ -51,6 +52,8 @@ public class Robot extends TimedRobot {
     // -1.
     static final double INTAKE_SPEED_IN = 1;
     static final double INTAKE_SPEED_OUT = -1;
+    static final double POPPER_SPEED_IN = 1;
+    static final double POPPER_SPEED_OUT = -1;
 
     XboxController xboxController = new XboxController(0); // driver
     XboxController gHeroController = new XboxController(1); // co-driver
@@ -72,6 +75,7 @@ public class Robot extends TimedRobot {
     boolean hangButton; // true if the button that extends the hang mecanism is pressed
     boolean intakeButton; // true if the button that intakes is pressed
     boolean intakeOutButton; // true if the button that runs the intake in reverse is pressed
+    boolean popperOutButton; // true if the button that reverses the popper is pressed.
 
     // creates objects for the talons
     TalonSRX leftMaster = new TalonSRX(LEFT_MASTER_ID);
@@ -81,6 +85,7 @@ public class Robot extends TimedRobot {
     TalonSRX drawbridgeMotor = new TalonSRX(DRAWBRIDGE_MOTOR_ID);
     TalonSRX hangMotor = new TalonSRX(WINCH_MOTOR_ID);
     TalonSRX intake = new TalonSRX(INTAKE_ID);
+    TalonSRX popper = new TalonSRX(POPPER_ID);
 
     // declares objects for the TwoStateMotor class
     TwoStateMotor drawbridge;
@@ -110,18 +115,27 @@ public class Robot extends TimedRobot {
         leftSlave.configFactoryDefault();
         rightMaster.configFactoryDefault();
         rightSlave.configFactoryDefault();
-
+        hangMotor.configFactoryDefault();
+        intake.configFactoryDefault();
+        popper.configFactoryDefault();
+        
         /* Set Neutral mode */
         leftMaster.setNeutralMode(NeutralMode.Brake);
         leftSlave.setNeutralMode(NeutralMode.Brake);
         rightMaster.setNeutralMode(NeutralMode.Brake);
         rightSlave.setNeutralMode(NeutralMode.Brake);
+        hangMotor.setNeutralMode(NeutralMode.Brake);
+        intake.setNeutralMode(NeutralMode.Coast);
+        popper.setNeutralMode(NeutralMode.Coast);
 
         /* Configure output direction */
         leftMaster.setInverted(false);
         leftSlave.setInverted(false);
         rightMaster.setInverted(false);
         leftSlave.setInverted(false);
+        hangMotor.setInverted(false);
+        intake.setInverted(false);
+        popper.setInverted(false);
 
         rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
         leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
@@ -205,6 +219,7 @@ public class Robot extends TimedRobot {
         intakeButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         hangButton = 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
+        popperOutButton = xboxController.getRawButton(R_SHOULDER);
 
         if (arcadeButton) {
             ArcadeDrive = true;
@@ -227,6 +242,7 @@ public class Robot extends TimedRobot {
         // this code handles intake
         if (intakeButton) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
+            popper.set(ControlMode.PercentOutput, POPPER_SPEED_OUT);
         } else if (intakeOutButton) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_IN);
         } else {
