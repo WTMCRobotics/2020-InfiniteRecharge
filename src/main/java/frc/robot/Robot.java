@@ -204,7 +204,7 @@ public class Robot extends TimedRobot {
         intakeOutButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
         intakeButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
-        hangButton = 0.75 < gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
+        hangButton = 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
 
         if (arcadeButton) {
             ArcadeDrive = true;
@@ -217,8 +217,8 @@ public class Robot extends TimedRobot {
         if (ArcadeDrive) {
             double x = rightjoyX;
             double y = leftjoyY;
-            leftMaster.set(ControlMode.PercentOutput, (y * (2 - Math.abs(x)) - x * (2 - Math.abs(y))) / 2);
-            rightMaster.set(ControlMode.PercentOutput, -(y * (2 - Math.abs(x)) + x * (2 - Math.abs(y))) / 2);
+            leftMaster.set(ControlMode.PercentOutput, -(y * (2 - Math.abs(x)) - x * (2 - Math.abs(y))) / 2);
+            rightMaster.set(ControlMode.PercentOutput, (y * (2 - Math.abs(x)) + x * (2 - Math.abs(y))) / 2);
         } else {
             leftMaster.set(ControlMode.PercentOutput, -leftjoyY);
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
