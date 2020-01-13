@@ -200,6 +200,8 @@ public class Robot extends TimedRobot {
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         hangButton = 0.75 < gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
 
+        System.out.println(hangButton);
+
         if (start) {
             ArcadeDrive = true;
         }
