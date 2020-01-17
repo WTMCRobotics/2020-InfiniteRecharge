@@ -8,14 +8,12 @@
 package frc.robot;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.PWMTalonSRX;
-import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -57,11 +55,10 @@ public class Robot extends TimedRobot {
     static final int autonPositionDeadbandVal = 125;
 
     static final double leftMotionVel = 6000;
-	static final double leftMotionAcc = 2000;
+    static final double leftMotionAcc = 2000;
 
-	static final double rightMotionVel = 6000;
+    static final double rightMotionVel = 6000;
     static final double rightMotionAcc = 2000;
-
 
     // changes the speed of power cell intake motor. Accepts values between 1 and
     // -1.
@@ -133,7 +130,7 @@ public class Robot extends TimedRobot {
         hangMotor.configFactoryDefault();
         intake.configFactoryDefault();
         popper.configFactoryDefault();
-        
+
         /* Set Neutral mode */
         leftMaster.setNeutralMode(NeutralMode.Brake);
         leftSlave.setNeutralMode(NeutralMode.Brake);
@@ -155,13 +152,14 @@ public class Robot extends TimedRobot {
         rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
         leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
 
-        if (true){
+        if (true) {
             circumference = 8 * Math.PI;
         } else {
             circumference = 6 * Math.PI;
         }
 
-        //resetEncoders();
+        rightMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative);
+        resetEncoders();
     }
 
     /**
@@ -181,13 +179,8 @@ public class Robot extends TimedRobot {
         hang.set(hangButton);
         hang.tick();
 
-        // double distanceToDrive = 15;
-        // System.out.println( "driving distance " + distanceToDrive);
-        // if(DriveDistance(distanceToDrive, 1)) {
-        //     System.out.println( "distance driven " + distanceToDrive);
-        //     resetEncoders();
-        //     //ResetGyro();
-        // }
+        System.out.println("rightMaster.GetSelectedSensorPosition(): " + rightMaster.getSelectedSensorPosition());
+
     }
 
     /**
@@ -221,7 +214,17 @@ public class Robot extends TimedRobot {
         case kDefaultAuto:
         default:
             // Put default auto code here
+            rightMaster.set(ControlMode.Disabled, -0.2);
+            System.out.println(rightMaster.getMotorOutputVoltage());
             break;
+        }
+
+        double distanceToDrive = 15;
+        System.out.println( "driving distance " + distanceToDrive);
+        if(DriveDistance(distanceToDrive, 1)) {
+        System.out.println( "distance driven " + distanceToDrive);
+        resetEncoders();
+        //resetGyro();
         }
     }
 
@@ -265,6 +268,7 @@ public class Robot extends TimedRobot {
             double y = leftjoyY;
             leftMaster.set(ControlMode.PercentOutput, -(y * (2 - Math.abs(x)) - x * (2 - Math.abs(y))) / 2);
             rightMaster.set(ControlMode.PercentOutput, (y * (2 - Math.abs(x)) + x * (2 - Math.abs(y))) / 2);
+            System.out.println(rightMaster.getMotorOutputPercent());
         } else {
             leftMaster.set(ControlMode.PercentOutput, -leftjoyY);
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
@@ -294,69 +298,71 @@ public class Robot extends TimedRobot {
     public void testPeriodic() {
     }
 
-    //checks margen of error for DriveDistance()
-	boolean autonPositionDeadband(double value, int target) {
-		//returns true if "value" is within the margen of error of "target"
-		if (Math.abs(target - value) < autonPositionDeadbandVal) {
-			return true; 
-		} else {
-			return false;
-		}
-	}
-
-    //drives "inches" inches at "speed" the cruise velocity
-	boolean DriveDistance(double inches, double speed) {
-		/*
-		 *returns true when done
-		 *
-		 *speed is a percentage from 0.0 to 1.0
-		 *
-		 * inches / circumference = number of rotations
-		 * pulsesPerRotationQuad = number of pulses in one rotation
-		 * targetEncPos = position encoder should read
-		 *int targetEncPos = (inches / Constant::circumference) * Constant::pulsesPerRotationQuad;
-		 */
-
-		int targetEncPos = (int)((inches / circumference) * pulsesPerRotationQuad);
-
-		if (autonPositionDeadband(leftMaster.getSelectedSensorPosition(pidChannel), targetEncPos)) {
-            System.out.println("stopping");
-			leftMaster.set(ControlMode.PercentOutput, 0);
-			rightMaster.set(ControlMode.PercentOutput, 0);
-			return true;
-		}
-		//cout << "rightMaster.GetSelectedSensorPosition(): " << rightMaster.GetSelectedSensorPosition() << endl;
-
-		if(speed > 1){
-			speed = 1;
-		}
-		if(speed <= 0.01) {
-			speed = 0.01;
+    // checks margen of error for DriveDistance()
+    boolean autonPositionDeadband(double value, int target) {
+        // returns true if "value" is within the margen of error of "target"
+        if (Math.abs(target - value) < autonPositionDeadbandVal) {
+            return true;
+        } else {
+            return false;
         }
-		leftMaster.configMotionCruiseVelocity((int)(speed * leftMotionVel));
-		rightMaster.configMotionCruiseVelocity((int)(speed * rightMotionVel));
-		leftMaster.configMotionAcceleration((int)((1 / speed) * leftMotionAcc));
-		rightMaster.configMotionAcceleration((int)((1 / speed) * rightMotionAcc));
-		leftMaster.set(ControlMode.MotionMagic, targetEncPos);
-		rightMaster.set(ControlMode.MotionMagic, targetEncPos);
-
-		return false;
-	}
-
-	//checks margen of error for DriveDistance()
-	boolean AutonPositionDeadband(double value, int target) {
-		//returns true if "value" is within the margen of error of "target"
-		if (Math.abs(target - value) < autonPositionDeadbandVal) {
-			return true; 
-		} else {
-			return false;
-		}
     }
-    
-    //sets encoder position to zero
-	void resetEncoders() {
-		//this will reset the progress of DriveDistance()
-		leftMaster.setSelectedSensorPosition(0, pidChannel, 50);  // 50 is the number of ms before it times out
-		rightMaster.setSelectedSensorPosition(0, pidChannel, 50);  // 50 is the number of ms before it times out
-	}
+
+    // drives "inches" inches at "speed" the cruise velocity
+    boolean DriveDistance(double inches, double speed) {
+        /*
+         * returns true when done
+         *
+         * speed is a percentage from 0.0 to 1.0
+         *
+         * inches / circumference = number of rotations pulsesPerRotationQuad = number
+         * of pulses in one rotation targetEncPos = position encoder should read int
+         * targetEncPos = (inches / Constant::circumference) *
+         * Constant::pulsesPerRotationQuad;
+         */
+
+        int targetEncPos = (int) ((inches / circumference) * pulsesPerRotationQuad);
+
+        if (autonPositionDeadband(rightMaster.getSelectedSensorPosition(pidChannel), targetEncPos)) {
+            System.out.println("stopping");
+            leftMaster.set(ControlMode.PercentOutput, 0);
+            rightMaster.set(ControlMode.PercentOutput, 0);
+            return true;
+        }
+
+        if (speed > 1) {
+            speed = 1;
+        }
+        if (speed <= 0.01) {
+            speed = 0.01;
+        }
+        leftMaster.configMotionCruiseVelocity((int)(speed * leftMotionVel));
+        rightMaster.configMotionCruiseVelocity((int)(speed * rightMotionVel));
+        leftMaster.configMotionAcceleration((int)((1 / speed) * leftMotionAcc));
+        rightMaster.configMotionAcceleration((int)((1 / speed) * rightMotionAcc));
+        leftMaster.set(ControlMode.MotionMagic, targetEncPos);
+        rightMaster.set(ControlMode.MotionMagic, targetEncPos);
+        leftMaster.set(ControlMode.MotionMagic, targetEncPos);
+        rightMaster.set(ControlMode.MotionMagic, targetEncPos);
+        rightMaster.set(ControlMode.MotionMagic, targetEncPos);
+
+        return false;
+    }
+
+    // checks margen of error for DriveDistance()
+    boolean AutonPositionDeadband(double value, int target) {
+        // returns true if "value" is within the margen of error of "target"
+        if (Math.abs(target - value) < autonPositionDeadbandVal) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // sets encoder position to zero
+    void resetEncoders() {
+        // this will reset the progress of DriveDistance()
+        leftMaster.setSelectedSensorPosition(0, pidChannel, 50); // 50 is the number of ms before it times out
+        rightMaster.setSelectedSensorPosition(0, pidChannel, 50); // 50 is the number of ms before it times out
+    }
 }
