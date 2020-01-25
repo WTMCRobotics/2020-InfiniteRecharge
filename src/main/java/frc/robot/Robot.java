@@ -7,8 +7,11 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -98,6 +101,49 @@ public class Robot extends TimedRobot {
     // declares objects for the TwoStateMotor class
     TwoStateMotor drawbridge;
     TwoStateMotor hang;
+    
+    public void initializeMotionMagicMaster(TalonSRX _talon) {
+        /* Factory default hardware to prevent unexpected behavior */
+		_talon.configFactoryDefault();
+
+		/* Configure Sensor Source for Pirmary PID */
+		_talon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, Constants.kPIDLoopIdx, Constants.kTimeoutMs);
+
+		/* set deadband to super small 0.001 (0.1 %).
+			The default deadband is 0.04 (4 %) */
+		_talon.configNeutralDeadband(0.001, Constants.kTimeoutMs);
+
+		/**
+		 * Configure Talon SRX Output and Sesnor direction accordingly Invert Motor to
+		 * have green LEDs when driving Talon Forward / Requesting Postiive Output Phase
+		 * sensor to have positive increment when driving Talon Forward (Green LED)
+		 */
+		_talon.setSensorPhase(false);
+
+		/* Set relevant frame periods to be at least as fast as periodic rate */
+		_talon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, Constants.kTimeoutMs);
+		_talon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, Constants.kTimeoutMs);
+
+		/* Set the peak and nominal outputs */
+		_talon.configNominalOutputForward(0, Constants.kTimeoutMs);
+		_talon.configNominalOutputReverse(0, Constants.kTimeoutMs);
+		_talon.configPeakOutputForward(1, Constants.kTimeoutMs);
+		_talon.configPeakOutputReverse(-1, Constants.kTimeoutMs);
+
+		/* Set Motion Magic gains in slot0 - see documentation */
+		_talon.selectProfileSlot(Constants.kSlotIdx, Constants.kPIDLoopIdx);
+		_talon.config_kF(Constants.kSlotIdx, Constants.kGains.kF, Constants.kTimeoutMs);
+		_talon.config_kP(Constants.kSlotIdx, Constants.kGains.kP, Constants.kTimeoutMs);
+		_talon.config_kI(Constants.kSlotIdx, Constants.kGains.kI, Constants.kTimeoutMs);
+		_talon.config_kD(Constants.kSlotIdx, Constants.kGains.kD, Constants.kTimeoutMs);
+
+		/* Set acceleration and vcruise velocity - see documentation */
+		_talon.configMotionCruiseVelocity(15000, Constants.kTimeoutMs);
+		_talon.configMotionAcceleration(6000, Constants.kTimeoutMs);
+
+		/* Zero the sensor once on robot boot up */
+		_talon.setSelectedSensorPosition(0, Constants.kPIDLoopIdx, Constants.kTimeoutMs);
+    }
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -137,19 +183,26 @@ public class Robot extends TimedRobot {
         popper.setNeutralMode(NeutralMode.Coast);
 
         /* Configure output direction */
-        leftMaster.setInverted(false);
-        leftSlave.setInverted(false);
+        leftMaster.setInverted(true);
+        leftSlave.setInverted(true);
         rightMaster.setInverted(false);
-        leftSlave.setInverted(false);
+        rightSlave.setInverted(false);
         hangMotor.setInverted(false);
         intake.setInverted(false);
         popper.setInverted(false);
 
+        rightMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative);
+        leftMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative);
+
         rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
         leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
+        System.out.println(resetEncoders());
+
+        initializeMotionMagicMaster(rightMaster);
+        initializeMotionMagicMaster(leftMaster);
 
         DIO9 = new DigitalInput(9);
-        isPracticeRobot = DIO9.get();
+        isPracticeRobot = !DIO9.get();
 
         if (isPracticeRobot) {
             circumference = 6 * Math.PI;
@@ -198,6 +251,7 @@ public class Robot extends TimedRobot {
         m_autoSelected = m_chooser.getSelected();
         // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
         System.out.println("Auto selected: " + m_autoSelected);
+        resetEncoders();
     }
 
     /**
@@ -212,10 +266,11 @@ public class Robot extends TimedRobot {
         case kDefaultAuto:
         default:
             // Put default auto code here
-            rightMaster.set(ControlMode.Disabled, -0.2);
-            System.out.println(rightMaster.getMotorOutputVoltage());
             break;
         }
+
+        rightMaster.set(ControlMode.MotionMagic, 4096 * 10.0);
+        leftMaster.set(ControlMode.MotionMagic, 4096 * 10.0);
     }
 
     /**
@@ -258,11 +313,12 @@ public class Robot extends TimedRobot {
             double y = leftjoyY;
             leftMaster.set(ControlMode.PercentOutput, -(y * (2 - Math.abs(x)) - x * (2 - Math.abs(y))) / 2);
             rightMaster.set(ControlMode.PercentOutput, (y * (2 - Math.abs(x)) + x * (2 - Math.abs(y))) / 2);
-            System.out.println(rightMaster.getMotorOutputPercent());
         } else {
             leftMaster.set(ControlMode.PercentOutput, -leftjoyY);
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
+
+        if (xboxController.getXButton()) resetEncoders();
 
         // this code handles intake
         if (intakeButton) {
@@ -286,5 +342,12 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
+    }
+
+    //sets encoder position to zero
+	boolean resetEncoders() {
+        ErrorCode rightError = rightMaster.setSelectedSensorPosition(0);
+        ErrorCode leftError = leftMaster.setSelectedSensorPosition(0);
+        return rightError.value == 0 && leftError.value == 0;
     }
 }
