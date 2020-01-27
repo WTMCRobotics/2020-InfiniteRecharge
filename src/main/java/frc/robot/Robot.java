@@ -34,6 +34,9 @@ public class Robot extends TimedRobot {
     private String m_autoSelected;
     private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+    // The maximum distance from the destination considered close enough
+    private static final Double deadband = 0.5;
+
     // can bus IDs. Can be found in Phoenix Tuner
     static final int LEFT_MASTER_ID = 2;
     static final int LEFT_SLAVE_ID = 3;
@@ -101,48 +104,50 @@ public class Robot extends TimedRobot {
     // declares objects for the TwoStateMotor class
     TwoStateMotor drawbridge;
     TwoStateMotor hang;
-    
+
     public void initializeMotionMagicMaster(TalonSRX masterTalon) {
         /* Factory default hardware to prevent unexpected behavior */
-		masterTalon.configFactoryDefault();
+        masterTalon.configFactoryDefault();
 
-		/* Configure Sensor Source for Pirmary PID */
-		masterTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
+        /* Configure Sensor Source for Pirmary PID */
+        masterTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, Constants.PID_LOOP_IDX,
+                Constants.TIMEOUT_MS);
 
-		/* set deadband to super small 0.001 (0.1 %).
-			The default deadband is 0.04 (4 %) */
-		masterTalon.configNeutralDeadband(0.001, Constants.TIMEOUT_MS);
+        /*
+         * set deadband to super small 0.001 (0.1 %). The default deadband is 0.04 (4 %)
+         */
+        masterTalon.configNeutralDeadband(0.001, Constants.TIMEOUT_MS);
 
-		/**
-		 * Configure Talon SRX Output and Sesnor direction accordingly Invert Motor to
-		 * have green LEDs when driving Talon Forward / Requesting Postiive Output Phase
-		 * sensor to have positive increment when driving Talon Forward (Green LED)
-		 */
-		masterTalon.setSensorPhase(false);
+        /**
+         * Configure Talon SRX Output and Sesnor direction accordingly Invert Motor to
+         * have green LEDs when driving Talon Forward / Requesting Postiive Output Phase
+         * sensor to have positive increment when driving Talon Forward (Green LED)
+         */
+        masterTalon.setSensorPhase(false);
 
-		/* Set relevant frame periods to be at least as fast as periodic rate */
-		masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, Constants.TIMEOUT_MS);
-		masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, Constants.TIMEOUT_MS);
+        /* Set relevant frame periods to be at least as fast as periodic rate */
+        masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, Constants.TIMEOUT_MS);
+        masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, Constants.TIMEOUT_MS);
 
-		/* Set the peak and nominal outputs */
-		masterTalon.configNominalOutputForward(0, Constants.TIMEOUT_MS);
-		masterTalon.configNominalOutputReverse(0, Constants.TIMEOUT_MS);
-		masterTalon.configPeakOutputForward(1, Constants.TIMEOUT_MS);
-		masterTalon.configPeakOutputReverse(-1, Constants.TIMEOUT_MS);
+        /* Set the peak and nominal outputs */
+        masterTalon.configNominalOutputForward(0, Constants.TIMEOUT_MS);
+        masterTalon.configNominalOutputReverse(0, Constants.TIMEOUT_MS);
+        masterTalon.configPeakOutputForward(1, Constants.TIMEOUT_MS);
+        masterTalon.configPeakOutputReverse(-1, Constants.TIMEOUT_MS);
 
-		/* Set Motion Magic gains in slot0 - see documentation */
-		masterTalon.selectProfileSlot(Constants.SLOT_IDX, Constants.PID_LOOP_IDX);
-		masterTalon.config_kF(Constants.SLOT_IDX, Constants.GAINS.F, Constants.TIMEOUT_MS);
-		masterTalon.config_kP(Constants.SLOT_IDX, Constants.GAINS.P, Constants.TIMEOUT_MS);
-		masterTalon.config_kI(Constants.SLOT_IDX, Constants.GAINS.I, Constants.TIMEOUT_MS);
-		masterTalon.config_kD(Constants.SLOT_IDX, Constants.GAINS.D, Constants.TIMEOUT_MS);
+        /* Set Motion Magic gains in slot0 - see documentation */
+        masterTalon.selectProfileSlot(Constants.SLOT_IDX, Constants.PID_LOOP_IDX);
+        masterTalon.config_kF(Constants.SLOT_IDX, Constants.GAINS.F, Constants.TIMEOUT_MS);
+        masterTalon.config_kP(Constants.SLOT_IDX, Constants.GAINS.P, Constants.TIMEOUT_MS);
+        masterTalon.config_kI(Constants.SLOT_IDX, Constants.GAINS.I, Constants.TIMEOUT_MS);
+        masterTalon.config_kD(Constants.SLOT_IDX, Constants.GAINS.D, Constants.TIMEOUT_MS);
 
-		/* Set acceleration and vcruise velocity - see documentation */
-		masterTalon.configMotionCruiseVelocity(15000, Constants.TIMEOUT_MS);
-		masterTalon.configMotionAcceleration(6000, Constants.TIMEOUT_MS);
+        /* Set acceleration and vcruise velocity - see documentation */
+        masterTalon.configMotionCruiseVelocity(15000, Constants.TIMEOUT_MS);
+        masterTalon.configMotionAcceleration(6000, Constants.TIMEOUT_MS);
 
-		/* Zero the sensor once on robot boot up */
-		masterTalon.setSelectedSensorPosition(0, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
+        /* Zero the sensor once on robot boot up */
+        masterTalon.setSelectedSensorPosition(0, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
     }
 
     /**
@@ -230,7 +235,8 @@ public class Robot extends TimedRobot {
         hang.set(hangButton);
         hang.tick();
 
-        System.out.println("rightMaster.GetSelectedSensorPosition(): " + rightMaster.getSelectedSensorPosition());
+        // System.out.println("rightMaster.GetSelectedSensorPosition(): " +
+        // rightMaster.getSelectedSensorPosition());
 
     }
 
@@ -268,9 +274,10 @@ public class Robot extends TimedRobot {
             // Put default auto code here
             break;
         }
-
-        rightMaster.set(ControlMode.MotionMagic, 4096 * 10.0);
-        leftMaster.set(ControlMode.MotionMagic, 4096 * 10.0);
+        if(moveInches(-12)){
+            System.out.println("done");
+        }
+        
     }
 
     /**
@@ -318,7 +325,8 @@ public class Robot extends TimedRobot {
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
 
-        if (xboxController.getXButton()) resetEncoders();
+        if (xboxController.getXButton())
+            resetEncoders();
 
         // this code handles intake
         if (intakeButton) {
@@ -344,10 +352,24 @@ public class Robot extends TimedRobot {
     public void testPeriodic() {
     }
 
-    //sets encoder position to zero
-	boolean resetEncoders() {
+    // sets encoder position to zero
+    boolean resetEncoders() {
         ErrorCode rightError = rightMaster.setSelectedSensorPosition(0);
         ErrorCode leftError = leftMaster.setSelectedSensorPosition(0);
         return rightError.value == 0 && leftError.value == 0;
+    }
+
+    boolean moveInches(float distance) {
+        rightMaster.set(ControlMode.MotionMagic, ticksInInches(distance));
+        leftMaster.set(ControlMode.MotionMagic, ticksInInches(distance));
+        if (Math.abs(rightMaster.getSelectedSensorPosition() - ticksInInches(distance)) < ticksInInches(deadband)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    double ticksInInches(double inches){
+        return 4096 * inches / circumference ; 
     }
 }
