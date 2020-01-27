@@ -102,47 +102,47 @@ public class Robot extends TimedRobot {
     TwoStateMotor drawbridge;
     TwoStateMotor hang;
     
-    public void initializeMotionMagicMaster(TalonSRX _talon) {
+    public void initializeMotionMagicMaster(TalonSRX masterTalon) {
         /* Factory default hardware to prevent unexpected behavior */
-		_talon.configFactoryDefault();
+		masterTalon.configFactoryDefault();
 
 		/* Configure Sensor Source for Pirmary PID */
-		_talon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
+		masterTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
 
 		/* set deadband to super small 0.001 (0.1 %).
 			The default deadband is 0.04 (4 %) */
-		_talon.configNeutralDeadband(0.001, Constants.TIMEOUT_MS);
+		masterTalon.configNeutralDeadband(0.001, Constants.TIMEOUT_MS);
 
 		/**
 		 * Configure Talon SRX Output and Sesnor direction accordingly Invert Motor to
 		 * have green LEDs when driving Talon Forward / Requesting Postiive Output Phase
 		 * sensor to have positive increment when driving Talon Forward (Green LED)
 		 */
-		_talon.setSensorPhase(false);
+		masterTalon.setSensorPhase(false);
 
 		/* Set relevant frame periods to be at least as fast as periodic rate */
-		_talon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, Constants.TIMEOUT_MS);
-		_talon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, Constants.TIMEOUT_MS);
+		masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, Constants.TIMEOUT_MS);
+		masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, Constants.TIMEOUT_MS);
 
 		/* Set the peak and nominal outputs */
-		_talon.configNominalOutputForward(0, Constants.TIMEOUT_MS);
-		_talon.configNominalOutputReverse(0, Constants.TIMEOUT_MS);
-		_talon.configPeakOutputForward(1, Constants.TIMEOUT_MS);
-		_talon.configPeakOutputReverse(-1, Constants.TIMEOUT_MS);
+		masterTalon.configNominalOutputForward(0, Constants.TIMEOUT_MS);
+		masterTalon.configNominalOutputReverse(0, Constants.TIMEOUT_MS);
+		masterTalon.configPeakOutputForward(1, Constants.TIMEOUT_MS);
+		masterTalon.configPeakOutputReverse(-1, Constants.TIMEOUT_MS);
 
 		/* Set Motion Magic gains in slot0 - see documentation */
-		_talon.selectProfileSlot(Constants.SLOT_IDX, Constants.PID_LOOP_IDX);
-		_talon.config_kF(Constants.SLOT_IDX, Constants.GAINS.kF, Constants.TIMEOUT_MS);
-		_talon.config_kP(Constants.SLOT_IDX, Constants.GAINS.kP, Constants.TIMEOUT_MS);
-		_talon.config_kI(Constants.SLOT_IDX, Constants.GAINS.kI, Constants.TIMEOUT_MS);
-		_talon.config_kD(Constants.SLOT_IDX, Constants.GAINS.kD, Constants.TIMEOUT_MS);
+		masterTalon.selectProfileSlot(Constants.SLOT_IDX, Constants.PID_LOOP_IDX);
+		masterTalon.config_kF(Constants.SLOT_IDX, Constants.GAINS.F, Constants.TIMEOUT_MS);
+		masterTalon.config_kP(Constants.SLOT_IDX, Constants.GAINS.P, Constants.TIMEOUT_MS);
+		masterTalon.config_kI(Constants.SLOT_IDX, Constants.GAINS.I, Constants.TIMEOUT_MS);
+		masterTalon.config_kD(Constants.SLOT_IDX, Constants.GAINS.D, Constants.TIMEOUT_MS);
 
 		/* Set acceleration and vcruise velocity - see documentation */
-		_talon.configMotionCruiseVelocity(15000, Constants.TIMEOUT_MS);
-		_talon.configMotionAcceleration(6000, Constants.TIMEOUT_MS);
+		masterTalon.configMotionCruiseVelocity(15000, Constants.TIMEOUT_MS);
+		masterTalon.configMotionAcceleration(6000, Constants.TIMEOUT_MS);
 
 		/* Zero the sensor once on robot boot up */
-		_talon.setSelectedSensorPosition(0, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
+		masterTalon.setSelectedSensorPosition(0, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
     }
 
     /**

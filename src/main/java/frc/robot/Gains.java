@@ -4,19 +4,19 @@
 package frc.robot;
 
 public class Gains {
-	public final double kP;
-	public final double kI;
-	public final double kD;
-	public final double kF;
-	public final int kIzone;
-	public final double kPeakOutput;
+	public final double P;
+	public final double I;
+	public final double D;
+	public final double F;
+	public final int IZONE;
+	public final double PEAK_OUTPUT;
 	
-	public Gains(double _kP, double _kI, double _kD, double _kF, int _kIzone, double _kPeakOutput){
-		kP = _kP;
-		kI = _kI;
-		kD = _kD;
-		kF = _kF;
-		kIzone = _kIzone;
-		kPeakOutput = _kPeakOutput;
+	public Gains(double p, double i, double d, double f, int izone, double peakOutput){
+		P = p;
+		I = i;
+		D = d;
+		F = f;
+		IZONE = izone;
+		PEAK_OUTPUT = peakOutput;
 	}
 }
