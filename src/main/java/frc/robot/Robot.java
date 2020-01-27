@@ -107,11 +107,11 @@ public class Robot extends TimedRobot {
 		_talon.configFactoryDefault();
 
 		/* Configure Sensor Source for Pirmary PID */
-		_talon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, Constants.kPIDLoopIdx, Constants.kTimeoutMs);
+		_talon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
 
 		/* set deadband to super small 0.001 (0.1 %).
 			The default deadband is 0.04 (4 %) */
-		_talon.configNeutralDeadband(0.001, Constants.kTimeoutMs);
+		_talon.configNeutralDeadband(0.001, Constants.TIMEOUT_MS);
 
 		/**
 		 * Configure Talon SRX Output and Sesnor direction accordingly Invert Motor to
@@ -121,28 +121,28 @@ public class Robot extends TimedRobot {
 		_talon.setSensorPhase(false);
 
 		/* Set relevant frame periods to be at least as fast as periodic rate */
-		_talon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, Constants.kTimeoutMs);
-		_talon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, Constants.kTimeoutMs);
+		_talon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, Constants.TIMEOUT_MS);
+		_talon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, Constants.TIMEOUT_MS);
 
 		/* Set the peak and nominal outputs */
-		_talon.configNominalOutputForward(0, Constants.kTimeoutMs);
-		_talon.configNominalOutputReverse(0, Constants.kTimeoutMs);
-		_talon.configPeakOutputForward(1, Constants.kTimeoutMs);
-		_talon.configPeakOutputReverse(-1, Constants.kTimeoutMs);
+		_talon.configNominalOutputForward(0, Constants.TIMEOUT_MS);
+		_talon.configNominalOutputReverse(0, Constants.TIMEOUT_MS);
+		_talon.configPeakOutputForward(1, Constants.TIMEOUT_MS);
+		_talon.configPeakOutputReverse(-1, Constants.TIMEOUT_MS);
 
 		/* Set Motion Magic gains in slot0 - see documentation */
-		_talon.selectProfileSlot(Constants.kSlotIdx, Constants.kPIDLoopIdx);
-		_talon.config_kF(Constants.kSlotIdx, Constants.kGains.kF, Constants.kTimeoutMs);
-		_talon.config_kP(Constants.kSlotIdx, Constants.kGains.kP, Constants.kTimeoutMs);
-		_talon.config_kI(Constants.kSlotIdx, Constants.kGains.kI, Constants.kTimeoutMs);
-		_talon.config_kD(Constants.kSlotIdx, Constants.kGains.kD, Constants.kTimeoutMs);
+		_talon.selectProfileSlot(Constants.SLOT_IDX, Constants.PID_LOOP_IDX);
+		_talon.config_kF(Constants.SLOT_IDX, Constants.GAINS.kF, Constants.TIMEOUT_MS);
+		_talon.config_kP(Constants.SLOT_IDX, Constants.GAINS.kP, Constants.TIMEOUT_MS);
+		_talon.config_kI(Constants.SLOT_IDX, Constants.GAINS.kI, Constants.TIMEOUT_MS);
+		_talon.config_kD(Constants.SLOT_IDX, Constants.GAINS.kD, Constants.TIMEOUT_MS);
 
 		/* Set acceleration and vcruise velocity - see documentation */
-		_talon.configMotionCruiseVelocity(15000, Constants.kTimeoutMs);
-		_talon.configMotionAcceleration(6000, Constants.kTimeoutMs);
+		_talon.configMotionCruiseVelocity(15000, Constants.TIMEOUT_MS);
+		_talon.configMotionAcceleration(6000, Constants.TIMEOUT_MS);
 
 		/* Zero the sensor once on robot boot up */
-		_talon.setSelectedSensorPosition(0, Constants.kPIDLoopIdx, Constants.kTimeoutMs);
+		_talon.setSelectedSensorPosition(0, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
     }
 
     /**
