@@ -18,8 +18,8 @@ import edu.wpi.first.wpilibj.DigitalInput;
  */
 
 class TwoStateMotor {
-    float speed; // the speed that the motor should travel at
-    float speedOffset = 0; // used to combat gravity, positive values cause faster sets and slower unsets
+    double speed; // the speed that the motor should travel at
+    double speedOffset = 0; // used to combat gravity, positive values cause faster sets and slower unsets
                            // (if speed is negitive this value will have the opposite effect)
     TalonSRX motor; // the motor to be controlled
     DigitalInput defaultSensor; // the sensor that will be true when the motor is in the default position
@@ -28,7 +28,7 @@ class TwoStateMotor {
     boolean isSet; // the state of the set Sensor
     int direction; // the target direction 1 for set and -1 for normal
 
-    TwoStateMotor(float speed, TalonSRX motor, int defaultSensor, int setSensor) {
+    TwoStateMotor(double speed, TalonSRX motor, int defaultSensor, int setSensor) {
         this.speed = speed;
         this.motor = motor;
         this.defaultSensor = new DigitalInput(defaultSensor);
@@ -36,7 +36,7 @@ class TwoStateMotor {
         this.motor.setNeutralMode(NeutralMode.Brake);
     }
 
-    TwoStateMotor(float speed, float speedOffset, TalonSRX motor, int defaultSensor, int setSensor) {
+    TwoStateMotor(double speed, double speedOffset, TalonSRX motor, int defaultSensor, int setSensor) {
         this(speed, motor, defaultSensor, setSensor);
         this.speedOffset = speedOffset;
     }

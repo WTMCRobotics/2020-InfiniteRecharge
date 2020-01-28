@@ -84,12 +84,13 @@ public class Robot extends TimedRobot {
 
     static final Gains PRACTICE_ROBOT_GAINS = new Gains(0.2, 0.0, 0.0, 0.2, 0, 1.0);
     static final Gains COMPETITION_ROBOT_GAINS = new Gains(0.2, 0.0, 0.0, 0.2, 0, 1.0);
-    static Gains gains; // used for drivetran motion magic when moving and is ste to PRACTICE_ROBOT_GAINS or COMPETITION_ROBOT_GAINS
+    static Gains gains; // used for drivetran motion magic when moving and is ste to
+                        // PRACTICE_ROBOT_GAINS or COMPETITION_ROBOT_GAINS
 
     // ##########################################
     // intake and popper related constants and variables
     // ##########################################
-    
+
     // the speed of the intake motor. Accepts values between 1 and -1.
     static final double INTAKE_SPEED_IN = 0.2;
     static final double INTAKE_SPEED_OUT = -0.2;
@@ -136,7 +137,6 @@ public class Robot extends TimedRobot {
     boolean intakeButton; // true if the button that intakes is pressed
     boolean intakeOutButton; // true if the button that runs the intake in reverse is pressed
     boolean popperOutButton; // true if the button that reverses the popper is pressed.
-
 
     public void initializeMotionMagicMaster(TalonSRX masterTalon) {
         /* Factory default hardware to prevent unexpected behavior */
@@ -193,8 +193,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", AUTON_CHOOSER);
         System.out.println("this is to test the drbug console and robotInit()");
 
-        drawbridge = new TwoStateMotor((float) 0.4, (float) -0.1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR,
-                DRAWBRIDGE_SET_SENSOR);
+        drawbridge = new TwoStateMotor(0.4, -0.1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
         hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
 
         /* Ensure motor output is neutral during init */
