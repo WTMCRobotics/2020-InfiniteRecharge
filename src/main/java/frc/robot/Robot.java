@@ -29,10 +29,10 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * project.
  */
 public class Robot extends TimedRobot {
-    private static final String kDefaultAuto = "Default";
-    private static final String kCustomAuto = "My Auto";
-    private String m_autoSelected;
-    private final SendableChooser<String> m_chooser = new SendableChooser<>();
+    private static final String DEFAULT_AUTON = "Default";
+    private static final String CUSTOM_AUTON = "My Auto";
+    private String autonSelected;
+    private final SendableChooser<String> AUTON_CHOOSER = new SendableChooser<>();
 
     // can bus IDs. Can be found in Phoenix Tuner
     static final int LEFT_MASTER_ID = 2;
@@ -151,9 +151,9 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
-        m_chooser.addOption("My Auto", kCustomAuto);
-        SmartDashboard.putData("Auto choices", m_chooser);
+        AUTON_CHOOSER.setDefaultOption("Default Auton", DEFAULT_AUTON);
+        AUTON_CHOOSER.addOption("My Auton", DEFAULT_AUTON);
+        SmartDashboard.putData("Auto choices", AUTON_CHOOSER);
         System.out.println("this is to test the drbug console and robotInit()");
 
         drawbridge = new TwoStateMotor((float) 0.4, (float) -0.1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR,
@@ -248,9 +248,8 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousInit() {
-        m_autoSelected = m_chooser.getSelected();
-        // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
-        System.out.println("Auto selected: " + m_autoSelected);
+        autonSelected = AUTON_CHOOSER.getSelected();
+        System.out.println("Auto selected: " + autonSelected);
         resetEncoders();
     }
 
@@ -259,11 +258,11 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousPeriodic() {
-        switch (m_autoSelected) {
-        case kCustomAuto:
+        switch (autonSelected) {
+        case CUSTOM_AUTON:
             // Put custom auto code here
             break;
-        case kDefaultAuto:
+        case DEFAULT_AUTON:
         default:
             // Put default auto code here
             break;
