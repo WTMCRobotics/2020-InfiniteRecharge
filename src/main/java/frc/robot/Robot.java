@@ -138,6 +138,63 @@ public class Robot extends TimedRobot {
     boolean intakeOutButton; // true if the button that runs the intake in reverse is pressed
     boolean popperOutButton; // true if the button that reverses the popper is pressed.
 
+    /**
+     * This function is run when the robot is first started up and should be used
+     * for any initialization code.
+     */
+    @Override
+    public void robotInit() {
+        AUTON_CHOOSER.setDefaultOption("Default Auton", DEFAULT_AUTON);
+        AUTON_CHOOSER.addOption("My Auton", DEFAULT_AUTON);
+        SmartDashboard.putData("Auto choices", AUTON_CHOOSER);
+        System.out.println("this is to test the drbug console and robotInit()");
+
+        initializeTalon(leftMaster, NeutralMode.Brake, true);
+        initializeTalon(leftSlave, NeutralMode.Brake, true);
+        initializeTalon(rightMaster, NeutralMode.Brake, false);
+        initializeTalon(rightSlave, NeutralMode.Brake, false);
+        initializeTalon(drawbridgeMotor, NeutralMode.Brake, false);
+        initializeTalon(hangMotor, NeutralMode.Brake, false);
+        initializeTalon(intake, NeutralMode.Brake, false);
+        initializeTalon(popper, NeutralMode.Brake, false);
+
+        initializeMotionMagicMaster(rightMaster);
+        initializeMotionMagicMaster(leftMaster);
+
+        rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
+        leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
+        System.out.println(resetEncoders());
+
+        drawbridge = new TwoStateMotor(0.4, -0.1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
+        hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
+
+        isPracticeRobot = !DIO9.get();
+
+        if (isPracticeRobot) {
+            circumference = 6 * Math.PI;
+            gains = PRACTICE_ROBOT_GAINS;
+            System.out.println("using 6 inch weels");
+        } else {
+            circumference = 8 * Math.PI;
+            gains = COMPETITION_ROBOT_GAINS;
+            System.out.println("using 8 inch weels");
+        }
+    }
+
+    public void initializeTalon(TalonSRX talon, NeutralMode neutralMode, boolean inverted) {
+        /* Ensure motor output is neutral during init */
+        talon.set(ControlMode.PercentOutput, 0);
+
+        /* Factory Default all hardware to prevent unexpected behaviour */
+        talon.configFactoryDefault();
+
+        /* Set Neutral mode */
+        talon.setNeutralMode(neutralMode);
+
+        /* Configure output direction */
+        talon.setInverted(inverted);
+    }
+
     public void initializeMotionMagicMaster(TalonSRX masterTalon) {
         /* Factory default hardware to prevent unexpected behavior */
         masterTalon.configFactoryDefault();
@@ -180,74 +237,6 @@ public class Robot extends TimedRobot {
 
         /* Zero the sensor once on robot boot up */
         masterTalon.setSelectedSensorPosition(0, PID_LOOP_IDX, TIMEOUT_MS);
-    }
-
-    /**
-     * This function is run when the robot is first started up and should be used
-     * for any initialization code.
-     */
-    @Override
-    public void robotInit() {
-        AUTON_CHOOSER.setDefaultOption("Default Auton", DEFAULT_AUTON);
-        AUTON_CHOOSER.addOption("My Auton", DEFAULT_AUTON);
-        SmartDashboard.putData("Auto choices", AUTON_CHOOSER);
-        System.out.println("this is to test the drbug console and robotInit()");
-
-        drawbridge = new TwoStateMotor(0.4, -0.1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
-        hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
-
-        /* Ensure motor output is neutral during init */
-        leftMaster.set(ControlMode.PercentOutput, 0);
-        rightMaster.set(ControlMode.PercentOutput, 0);
-
-        /* Factory Default all hardware to prevent unexpected behaviour */
-        leftMaster.configFactoryDefault();
-        leftSlave.configFactoryDefault();
-        rightMaster.configFactoryDefault();
-        rightSlave.configFactoryDefault();
-        hangMotor.configFactoryDefault();
-        intake.configFactoryDefault();
-        popper.configFactoryDefault();
-
-        /* Set Neutral mode */
-        leftMaster.setNeutralMode(NeutralMode.Brake);
-        leftSlave.setNeutralMode(NeutralMode.Brake);
-        rightMaster.setNeutralMode(NeutralMode.Brake);
-        rightSlave.setNeutralMode(NeutralMode.Brake);
-        hangMotor.setNeutralMode(NeutralMode.Brake);
-        intake.setNeutralMode(NeutralMode.Coast);
-        popper.setNeutralMode(NeutralMode.Coast);
-
-        /* Configure output direction */
-        leftMaster.setInverted(true);
-        leftSlave.setInverted(true);
-        rightMaster.setInverted(false);
-        rightSlave.setInverted(false);
-        hangMotor.setInverted(false);
-        intake.setInverted(false);
-        popper.setInverted(false);
-
-        rightMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative);
-        leftMaster.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative);
-
-        rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
-        leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
-        System.out.println(resetEncoders());
-
-        initializeMotionMagicMaster(rightMaster);
-        initializeMotionMagicMaster(leftMaster);
-
-        isPracticeRobot = !DIO9.get();
-
-        if (isPracticeRobot) {
-            circumference = 6 * Math.PI;
-            gains = PRACTICE_ROBOT_GAINS;
-            System.out.println("using 6 inch weels");
-        } else {
-            circumference = 8 * Math.PI;
-            gains = COMPETITION_ROBOT_GAINS;
-            System.out.println("using 8 inch weels");
-        }
     }
 
     /**
