@@ -45,9 +45,6 @@ public class Robot extends TimedRobot {
     // talon related constants and variables
     // ##########################################
 
-    // The maximum distance from the destination considered close enough
-    private static final Double deadband = 0.5;
-
     // can bus IDs. Can be found in Phoenix Tuner
     static final int LEFT_MASTER_ID = 2;
     static final int LEFT_SLAVE_ID = 3;
@@ -78,6 +75,9 @@ public class Robot extends TimedRobot {
     // ##########################################
     // drivetrain and pid related constants and variables
     // ##########################################
+    
+    // The maximum distance from the destination considered close enough
+    private static final Double deadband = 0.5;
 
     boolean isPracticeRobot; // true if DIO9 is pulled low
     DigitalInput DIO9 = new DigitalInput(9); // this should be pulled low on the 2016 Practice Robot
@@ -383,16 +383,16 @@ public class Robot extends TimedRobot {
     }
 
     boolean moveInches(float distance) {
-        rightMaster.set(ControlMode.MotionMagic, ticksInInches(distance));
-        leftMaster.set(ControlMode.MotionMagic, ticksInInches(distance));
-        if (Math.abs(rightMaster.getSelectedSensorPosition() - ticksInInches(distance)) < ticksInInches(deadband)) {
+        rightMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
+        leftMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
+        if (Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(distance)) < inchesToTicks(deadband)) {
             return true;
         } else {
             return false;
         }
     }
 
-    double ticksInInches(double inches){
-        return 4096 * inches / circumference ; 
+    double inchesToTicks(double inches){
+        return encoderRotation * inches / circumference ; 
     }
 }
