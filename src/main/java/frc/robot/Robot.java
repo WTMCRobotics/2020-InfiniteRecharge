@@ -29,42 +29,92 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * project.
  */
 public class Robot extends TimedRobot {
+
+    // ##########################################
+    // auton related constants and variables
+    // ##########################################
+
+    // auton modes
     private static final String DEFAULT_AUTON = "Default";
     private static final String CUSTOM_AUTON = "My Auto";
-    private String autonSelected;
+    // SendableChooser<String> puts a dropdown menu on the dashboard
     private final SendableChooser<String> AUTON_CHOOSER = new SendableChooser<>();
+    private String autonSelected; // the auton mode chossen by the dashboard
+
+    // ##########################################
+    // talon related constants and variables
+    // ##########################################
 
     // can bus IDs. Can be found in Phoenix Tuner
     static final int LEFT_MASTER_ID = 2;
     static final int LEFT_SLAVE_ID = 3;
-
     static final int RIGHT_MASTER_ID = 4;
     static final int RIGHT_SLAVE_ID = 5;
-
     static final int DRAWBRIDGE_MOTOR_ID = 11;
     static final int WINCH_MOTOR_ID = 7;
-
     static final int INTAKE_ID = 12;
     static final int POPPER_ID = 10;
 
-    // DIO
-    static final int DRAWBRIDGE_SET_SENSOR = 0;
-    static final int DRAWBRIDGE_DEFAULT_SENSOR = 1;
-    static final int HANG_SET_SENSOR = 2;
-    static final int HANG_DEFAULT_SENSOR = 3;
+    // creates objects for the talons
+    TalonSRX leftMaster = new TalonSRX(LEFT_MASTER_ID);
+    TalonSRX leftSlave = new TalonSRX(LEFT_SLAVE_ID);
+    TalonSRX rightMaster = new TalonSRX(RIGHT_MASTER_ID);
+    TalonSRX rightSlave = new TalonSRX(RIGHT_SLAVE_ID);
+    TalonSRX drawbridgeMotor = new TalonSRX(DRAWBRIDGE_MOTOR_ID);
+    TalonSRX hangMotor = new TalonSRX(WINCH_MOTOR_ID);
+    TalonSRX intake = new TalonSRX(INTAKE_ID);
+    TalonSRX popper = new TalonSRX(POPPER_ID);
 
-    double circumference;
+    static final int encoderRotation = 4096; // the number of ticks in a full rotation
 
-    // changes the speed of the intake motor. Accepts values between 1 and -1.
+    // talon config
+    public static final int SLOT_IDX = 0; // Which PID slot to pull gains from
+    public static final int PID_LOOP_IDX = 0; // Which PID loop to pull gains from
+    public static final int TIMEOUT_MS = 30; // amount of time in ms to wait for conformation
+
+    // ##########################################
+    // drivetrain and pid related constants and variables
+    // ##########################################
+
+    boolean isPracticeRobot; // true if DIO9 is pulled low
+    DigitalInput DIO9 = new DigitalInput(9); // this should be pulled low on the 2016 Practice Robot
+    double circumference; // this value will be updated with the circumference of the drive wheels
+
+    boolean ArcadeDrive = true; // variable stores weather to use Arcade or tank style controls
+
+    static final Gains PRACTICE_ROBOT_GAINS = new Gains(0.2, 0.0, 0.0, 0.2, 0, 1.0);
+    static final Gains COMPETITION_ROBOT_GAINS = new Gains(0.2, 0.0, 0.0, 0.2, 0, 1.0);
+    static Gains gains; // used for drivetran motion magic when moving and is ste to PRACTICE_ROBOT_GAINS or COMPETITION_ROBOT_GAINS
+
+    // ##########################################
+    // intake and popper related constants and variables
+    // ##########################################
+    
+    // the speed of the intake motor. Accepts values between 1 and -1.
     static final double INTAKE_SPEED_IN = 0.2;
     static final double INTAKE_SPEED_OUT = -0.2;
 
-    // changes the speed of the popper motor. Accepts values between 1 and -1.
+    // the speed of the popper motor. Accepts values between 1 and -1.
     static final double POPPER_SPEED_IN = 0.2;
     static final double POPPER_SPEED_OUT = -0.2;
 
-    boolean isPracticeRobot;
-    DigitalInput DIO9;
+    // ##########################################
+    // Drawbridge and hang related constants and variables
+    // ##########################################
+
+    // DIO
+    static final int DRAWBRIDGE_SET_SENSOR = 0; // sensor for when the drawbride is down
+    static final int DRAWBRIDGE_DEFAULT_SENSOR = 1; // sensor for when the drawbride is up
+    static final int HANG_SET_SENSOR = 2; // sensor for when the winch is extended
+    static final int HANG_DEFAULT_SENSOR = 3; // sensor for when the winch is retracted
+
+    // declares objects for the TwoStateMotor class
+    TwoStateMotor drawbridge;
+    TwoStateMotor hang;
+
+    // ##########################################
+    // Controller related constants and variables
+    // ##########################################
 
     XboxController xboxController = new XboxController(0); // driver
     XboxController gHeroController = new XboxController(1); // co-driver
@@ -72,7 +122,6 @@ public class Robot extends TimedRobot {
     double rightjoyY; // y-axis of the right joystick on the driver's controller
     double leftjoyX; // x-axis of the left joystick on the driver's controller
     double rightjoyX; // x-axis of the right joystick on the driver's controller
-    boolean ArcadeDrive = true; // variable stores weather to use Arcade or tank style controls
 
     static final int START = 7; // the mapping of the start button on a xbox controller
     static final int SELECT = 8; // the mapping of the select button on a xbox controller
@@ -88,61 +137,49 @@ public class Robot extends TimedRobot {
     boolean intakeOutButton; // true if the button that runs the intake in reverse is pressed
     boolean popperOutButton; // true if the button that reverses the popper is pressed.
 
-    // creates objects for the talons
-    TalonSRX leftMaster = new TalonSRX(LEFT_MASTER_ID);
-    TalonSRX leftSlave = new TalonSRX(LEFT_SLAVE_ID);
-    TalonSRX rightMaster = new TalonSRX(RIGHT_MASTER_ID);
-    TalonSRX rightSlave = new TalonSRX(RIGHT_SLAVE_ID);
-    TalonSRX drawbridgeMotor = new TalonSRX(DRAWBRIDGE_MOTOR_ID);
-    TalonSRX hangMotor = new TalonSRX(WINCH_MOTOR_ID);
-    TalonSRX intake = new TalonSRX(INTAKE_ID);
-    TalonSRX popper = new TalonSRX(POPPER_ID);
 
-    // declares objects for the TwoStateMotor class
-    TwoStateMotor drawbridge;
-    TwoStateMotor hang;
-    
     public void initializeMotionMagicMaster(TalonSRX masterTalon) {
         /* Factory default hardware to prevent unexpected behavior */
-		masterTalon.configFactoryDefault();
+        masterTalon.configFactoryDefault();
 
-		/* Configure Sensor Source for Pirmary PID */
-		masterTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
+        /* Configure Sensor Source for Pirmary PID */
+        masterTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, PID_LOOP_IDX, TIMEOUT_MS);
 
-		/* set deadband to super small 0.001 (0.1 %).
-			The default deadband is 0.04 (4 %) */
-		masterTalon.configNeutralDeadband(0.001, Constants.TIMEOUT_MS);
+        /*
+         * set deadband to super small 0.001 (0.1 %). The default deadband is 0.04 (4 %)
+         */
+        masterTalon.configNeutralDeadband(0.001, TIMEOUT_MS);
 
-		/**
-		 * Configure Talon SRX Output and Sesnor direction accordingly Invert Motor to
-		 * have green LEDs when driving Talon Forward / Requesting Postiive Output Phase
-		 * sensor to have positive increment when driving Talon Forward (Green LED)
-		 */
-		masterTalon.setSensorPhase(false);
+        /**
+         * Configure Talon SRX Output and Sesnor direction accordingly Invert Motor to
+         * have green LEDs when driving Talon Forward / Requesting Postiive Output Phase
+         * sensor to have positive increment when driving Talon Forward (Green LED)
+         */
+        masterTalon.setSensorPhase(false);
 
-		/* Set relevant frame periods to be at least as fast as periodic rate */
-		masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, Constants.TIMEOUT_MS);
-		masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, Constants.TIMEOUT_MS);
+        /* Set relevant frame periods to be at least as fast as periodic rate */
+        masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_13_Base_PIDF0, 10, TIMEOUT_MS);
+        masterTalon.setStatusFramePeriod(StatusFrameEnhanced.Status_10_MotionMagic, 10, TIMEOUT_MS);
 
-		/* Set the peak and nominal outputs */
-		masterTalon.configNominalOutputForward(0, Constants.TIMEOUT_MS);
-		masterTalon.configNominalOutputReverse(0, Constants.TIMEOUT_MS);
-		masterTalon.configPeakOutputForward(1, Constants.TIMEOUT_MS);
-		masterTalon.configPeakOutputReverse(-1, Constants.TIMEOUT_MS);
+        /* Set the peak and nominal outputs */
+        masterTalon.configNominalOutputForward(0, TIMEOUT_MS);
+        masterTalon.configNominalOutputReverse(0, TIMEOUT_MS);
+        masterTalon.configPeakOutputForward(1, TIMEOUT_MS);
+        masterTalon.configPeakOutputReverse(-1, TIMEOUT_MS);
 
-		/* Set Motion Magic gains in slot0 - see documentation */
-		masterTalon.selectProfileSlot(Constants.SLOT_IDX, Constants.PID_LOOP_IDX);
-		masterTalon.config_kF(Constants.SLOT_IDX, Constants.GAINS.F, Constants.TIMEOUT_MS);
-		masterTalon.config_kP(Constants.SLOT_IDX, Constants.GAINS.P, Constants.TIMEOUT_MS);
-		masterTalon.config_kI(Constants.SLOT_IDX, Constants.GAINS.I, Constants.TIMEOUT_MS);
-		masterTalon.config_kD(Constants.SLOT_IDX, Constants.GAINS.D, Constants.TIMEOUT_MS);
+        /* Set Motion Magic gains in slot0 - see documentation */
+        masterTalon.selectProfileSlot(SLOT_IDX, PID_LOOP_IDX);
+        masterTalon.config_kF(SLOT_IDX, gains.F, TIMEOUT_MS);
+        masterTalon.config_kP(SLOT_IDX, gains.P, TIMEOUT_MS);
+        masterTalon.config_kI(SLOT_IDX, gains.I, TIMEOUT_MS);
+        masterTalon.config_kD(SLOT_IDX, gains.D, TIMEOUT_MS);
 
-		/* Set acceleration and vcruise velocity - see documentation */
-		masterTalon.configMotionCruiseVelocity(15000, Constants.TIMEOUT_MS);
-		masterTalon.configMotionAcceleration(6000, Constants.TIMEOUT_MS);
+        /* Set acceleration and vcruise velocity - see documentation */
+        masterTalon.configMotionCruiseVelocity(15000, TIMEOUT_MS);
+        masterTalon.configMotionAcceleration(6000, TIMEOUT_MS);
 
-		/* Zero the sensor once on robot boot up */
-		masterTalon.setSelectedSensorPosition(0, Constants.PID_LOOP_IDX, Constants.TIMEOUT_MS);
+        /* Zero the sensor once on robot boot up */
+        masterTalon.setSelectedSensorPosition(0, PID_LOOP_IDX, TIMEOUT_MS);
     }
 
     /**
@@ -201,14 +238,15 @@ public class Robot extends TimedRobot {
         initializeMotionMagicMaster(rightMaster);
         initializeMotionMagicMaster(leftMaster);
 
-        DIO9 = new DigitalInput(9);
         isPracticeRobot = !DIO9.get();
 
         if (isPracticeRobot) {
             circumference = 6 * Math.PI;
+            gains = PRACTICE_ROBOT_GAINS;
             System.out.println("using 6 inch weels");
         } else {
             circumference = 8 * Math.PI;
+            gains = COMPETITION_ROBOT_GAINS;
             System.out.println("using 8 inch weels");
         }
     }
@@ -317,7 +355,8 @@ public class Robot extends TimedRobot {
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
 
-        if (xboxController.getXButton()) resetEncoders();
+        if (xboxController.getXButton())
+            resetEncoders();
 
         // this code handles intake
         if (intakeButton) {
@@ -343,8 +382,8 @@ public class Robot extends TimedRobot {
     public void testPeriodic() {
     }
 
-    //sets encoder position to zero
-	boolean resetEncoders() {
+    // sets encoder position to zero
+    boolean resetEncoders() {
         ErrorCode rightError = rightMaster.setSelectedSensorPosition(0);
         ErrorCode leftError = leftMaster.setSelectedSensorPosition(0);
         return rightError.value == 0 && leftError.value == 0;
