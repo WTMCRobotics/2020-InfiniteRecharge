@@ -391,6 +391,7 @@ public class Robot extends TimedRobot {
         return rightError.value == 0 && leftError.value == 0;
     }
 
+    // move an amount in s strieght line
     boolean moveInches(float distance) {
         rightMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
         leftMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
