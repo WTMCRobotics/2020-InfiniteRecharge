@@ -35,8 +35,10 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // auton modes
-    private static final String DEFAULT_AUTON = "Default";
-    private static final String CUSTOM_AUTON = "My Auto";
+    private static final String DEFAULT_AUTON_POS = "Default";
+    private static final String RIGHT_AUTON_POS = "Right";
+    private static final String CENTER_AUTON_POS = "Center";
+    private static final String LEFT_AUTON_POS = "Left";
     // SendableChooser<String> puts a dropdown menu on the dashboard
     private final SendableChooser<String> AUTON_CHOOSER = new SendableChooser<>();
     private String autonSelected; // the auton mode chossen by the dashboard
@@ -75,7 +77,7 @@ public class Robot extends TimedRobot {
     // ##########################################
     // drivetrain and pid related constants and variables
     // ##########################################
-    
+
     // The maximum distance from the destination considered close enough
     private static final Double deadband = 0.5;
 
@@ -147,8 +149,10 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        AUTON_CHOOSER.setDefaultOption("Default Auton", DEFAULT_AUTON);
-        AUTON_CHOOSER.addOption("My Auton", DEFAULT_AUTON);
+        AUTON_CHOOSER.setDefaultOption("Default Auton", DEFAULT_AUTON_POS);
+        AUTON_CHOOSER.addOption("Right", RIGHT_AUTON_POS);
+        AUTON_CHOOSER.addOption("Center", CENTER_AUTON_POS);
+        AUTON_CHOOSER.addOption("Left", LEFT_AUTON_POS);
         SmartDashboard.putData("Auto choices", AUTON_CHOOSER);
         System.out.println("this is to test the drbug console and robotInit()");
 
@@ -289,18 +293,24 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         switch (autonSelected) {
-        case CUSTOM_AUTON:
+        case RIGHT_AUTON_POS:
             // Put custom auto code here
             break;
-        case DEFAULT_AUTON:
+        case CENTER_AUTON_POS:
+            // Put custom auto code here
+            break;
+        case LEFT_AUTON_POS:
+            // Put custom auto code here
+            break;
+        case DEFAULT_AUTON_POS:
         default:
             // Put default auto code here
             break;
         }
-        if(moveInches(-12)){
+        if (moveInches(-12)) {
             System.out.println("done");
         }
-        
+
     }
 
     /**
@@ -392,7 +402,7 @@ public class Robot extends TimedRobot {
         }
     }
 
-    double inchesToTicks(double inches){
-        return encoderRotation * inches / circumference ; 
+    double inchesToTicks(double inches) {
+        return encoderRotation * inches / circumference;
     }
 }
