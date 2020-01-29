@@ -86,7 +86,7 @@ public class Robot extends TimedRobot {
 
     boolean ArcadeDrive = true; // variable stores weather to use Arcade or tank style controls
 
-    static final Gains PRACTICE_ROBOT_GAINS = new Gains(0.2, 0.0, 0.0, 0.2, 0, 1.0);
+    static final Gains PRACTICE_ROBOT_GAINS = new Gains(0.8, 0.00035, 1.5, 0.2, 0, 1.0);
     static final Gains COMPETITION_ROBOT_GAINS = new Gains(0.2, 0.0, 0.0, 0.2, 0, 1.0);
     static Gains gains; // used for drivetran motion magic when moving and is ste to
                         // PRACTICE_ROBOT_GAINS or COMPETITION_ROBOT_GAINS
@@ -155,6 +155,17 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData("Auto choices", AUTON_CHOOSER);
         System.out.println("this is to test the drbug console and robotInit()");
 
+        isPracticeRobot = !DIO9.get();
+        if (isPracticeRobot) {
+            circumference = 6 * Math.PI;
+            gains = PRACTICE_ROBOT_GAINS;
+            System.out.println("using 6 inch weels");
+        } else {
+            circumference = 8 * Math.PI;
+            gains = COMPETITION_ROBOT_GAINS;
+            System.out.println("using 8 inch weels");
+        }
+
         initializeTalon(leftMaster, NeutralMode.Brake, true);
         initializeTalon(leftSlave, NeutralMode.Brake, true);
         initializeTalon(rightMaster, NeutralMode.Brake, false);
@@ -173,18 +184,6 @@ public class Robot extends TimedRobot {
 
         drawbridge = new TwoStateMotor(0.4, -0.1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
         hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
-
-        isPracticeRobot = !DIO9.get();
-
-        if (isPracticeRobot) {
-            circumference = 6 * Math.PI;
-            gains = PRACTICE_ROBOT_GAINS;
-            System.out.println("using 6 inch weels");
-        } else {
-            circumference = 8 * Math.PI;
-            gains = COMPETITION_ROBOT_GAINS;
-            System.out.println("using 8 inch weels");
-        }
     }
 
     public void initializeTalon(TalonSRX talon, NeutralMode neutralMode, boolean inverted) {
@@ -306,7 +305,7 @@ public class Robot extends TimedRobot {
             // Put default auto code here
             break;
         }
-        if (moveInches(-12)) {
+        if (moveInches(-12 * 3)) {
             System.out.println("done");
         }
 
@@ -357,8 +356,9 @@ public class Robot extends TimedRobot {
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
 
-        if (xboxController.getXButton())
+        if (xboxController.getXButton()) {
             resetEncoders();
+        }
 
         // this code handles intake
         if (intakeButton) {
@@ -382,6 +382,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
+        rightMaster.set(ControlMode.PercentOutput, 0.2);
     }
 
     // sets encoder position to zero
