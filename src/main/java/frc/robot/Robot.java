@@ -402,6 +402,7 @@ public class Robot extends TimedRobot {
         }
     }
 
+    //converts inches to the value needed by the talon enchoder for motion magic
     double inchesToTicks(double inches) {
         return encoderRotation * inches / circumference;
     }
