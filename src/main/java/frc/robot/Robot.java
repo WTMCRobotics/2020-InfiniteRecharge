@@ -13,12 +13,18 @@ import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.kauailabs.navx.frc.AHRS;
+
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.SPI.Port;
+import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile.Constraints;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -77,6 +83,14 @@ public class Robot extends TimedRobot {
     // drivetrain and pid related constants and variables
     // ##########################################
 
+    // the obect that is the navX-MXP
+    AHRS gyro = new AHRS(Port.kMXP);
+    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.2, 0.00035, 1.5, 0.0, 0, 0.0);
+    static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
+    static Gains rotationGains;
+    static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(10, 10); // m/s and m/s/s
+    ProfiledPIDController rotationPID;
+
     // The maximum distance from the destination considered close enough
     private static final Double deadband = 0.5;
 
@@ -86,8 +100,8 @@ public class Robot extends TimedRobot {
 
     boolean ArcadeDrive = true; // variable stores weather to use Arcade or tank style controls
 
-    static final Gains PRACTICE_ROBOT_GAINS = new Gains(0.8, 0.00035, 1.5, 0.2, 0, 1.0);
-    static final Gains COMPETITION_ROBOT_GAINS = new Gains(0.2, 0.0, 0.0, 0.2, 0, 1.0);
+    static final Gains PRACTICE_ROBOT_GAINS = new Gains(0.2, 0.00035, 1.5, 0.2, 0, 1.0);
+    static final Gains COMPETITION_ROBOT_GAINS = new Gains(2.0, 0.0, 0.0, 0.2, 0, 1.0);
     static Gains gains; // used for drivetran motion magic when moving and is ste to
                         // PRACTICE_ROBOT_GAINS or COMPETITION_ROBOT_GAINS
 
@@ -159,17 +173,21 @@ public class Robot extends TimedRobot {
         if (isPracticeRobot) {
             circumference = 6 * Math.PI;
             gains = PRACTICE_ROBOT_GAINS;
+            rotationGains = PRACTICE_ROTATION_GAINS;
             System.out.println("using 6 inch weels");
         } else {
             circumference = 8 * Math.PI;
             gains = COMPETITION_ROBOT_GAINS;
+            rotationGains = COMPETITION_ROTATION_GAINS;
             System.out.println("using 8 inch weels");
         }
 
-        initializeTalon(leftMaster, NeutralMode.Brake, true);
-        initializeTalon(leftSlave, NeutralMode.Brake, true);
-        initializeTalon(rightMaster, NeutralMode.Brake, false);
-        initializeTalon(rightSlave, NeutralMode.Brake, false);
+        rotationPID = new  ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
+
+        initializeTalon(leftMaster, NeutralMode.Brake, false);
+        initializeTalon(leftSlave, NeutralMode.Brake, false);
+        initializeTalon(rightMaster, NeutralMode.Brake, true);
+        initializeTalon(rightSlave, NeutralMode.Brake, true);
         initializeTalon(drawbridgeMotor, NeutralMode.Brake, false);
         initializeTalon(hangMotor, NeutralMode.Brake, false);
         initializeTalon(intake, NeutralMode.Brake, false);
@@ -205,7 +223,7 @@ public class Robot extends TimedRobot {
         masterTalon.configFactoryDefault();
 
         /* Configure Sensor Source for Pirmary PID */
-        masterTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, PID_LOOP_IDX, TIMEOUT_MS);
+        masterTalon.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, PID_LOOP_IDX, TIMEOUT_MS);
 
         /*
          * set deadband to super small 0.001 (0.1 %). The default deadband is 0.04 (4 %)
@@ -263,6 +281,8 @@ public class Robot extends TimedRobot {
 
         // System.out.println("rightMaster.GetSelectedSensorPosition(): " +
         // rightMaster.getSelectedSensorPosition());
+        // System.out.println("leftMaster.GetSelectedSensorPosition(): " +
+        // leftMaster.getSelectedSensorPosition());
 
     }
 
@@ -271,7 +291,7 @@ public class Robot extends TimedRobot {
      * between different autonomous modes using the dashboard. The sendable chooser
      * code works with the Java SmartDashboard. If you prefer the LabVIEW Dashboard,
      * remove all of the chooser code and uncomment the getString line to get the
-     * auto name from the text box below the Gyro
+     * auto name from the text box below the gyro
      *
      * <p>
      * You can add additional auto modes by adding additional comparisons to the
@@ -305,7 +325,7 @@ public class Robot extends TimedRobot {
             // Put default auto code here
             break;
         }
-        if (moveInches(-12 * 3)) {
+        if (moveInches(12)) {
             System.out.println("done");
         }
 
@@ -349,10 +369,10 @@ public class Robot extends TimedRobot {
         if (ArcadeDrive) {
             double x = rightjoyX;
             double y = leftjoyY;
-            leftMaster.set(ControlMode.PercentOutput, -(y * (2 - Math.abs(x)) - x * (2 - Math.abs(y))) / 2);
+            leftMaster.set(ControlMode.PercentOutput, (y * (2 - Math.abs(x)) - x * (2 - Math.abs(y))) / 2);
             rightMaster.set(ControlMode.PercentOutput, (y * (2 - Math.abs(x)) + x * (2 - Math.abs(y))) / 2);
         } else {
-            leftMaster.set(ControlMode.PercentOutput, -leftjoyY);
+            leftMaster.set(ControlMode.PercentOutput, leftjoyY);
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
 
@@ -382,7 +402,15 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
-        rightMaster.set(ControlMode.PercentOutput, 0.2);
+        // if (moveInches(-12)) {
+        //     System.out.println("done");
+        // }
+        System.out.println(7.0/2);
+        System.out.println(gyro.getAngle() +"    "+ rotationPID.calculate(gyro.getAngle(), 45));
+    }
+
+    public void testInit() {
+        gyro.reset();
     }
 
     // sets encoder position to zero
@@ -394,6 +422,7 @@ public class Robot extends TimedRobot {
 
     // move an amount in s strieght line
     boolean moveInches(float distance) {
+        distance = -distance;
         rightMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
         leftMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
         if (Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(distance)) < inchesToTicks(deadband)) {
@@ -403,8 +432,28 @@ public class Robot extends TimedRobot {
         }
     }
 
-    //converts inches to the value needed by the talon enchoder for motion magic
+    // converts inches to the value needed by the talon encoder for motion magic
     double inchesToTicks(double inches) {
         return encoderRotation * inches / circumference;
     }
+
+    // boolean turnRads(double radians){
+    //     return turnDegs(radians * 180/Math.PI);
+    // }
+
+    // boolean turnDegs(double degrees){
+    //     degrees %= 360;
+    //     if (180<degrees){
+    //         degrees -= 180;
+    //     } else if (-180>degrees){
+    //         degrees += 180;
+    //     }
+    //     rightMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
+    //     leftMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
+    //     if (Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(distance)) < inchesToTicks(deadband)) {
+    //         return true;
+    //     } else {
+    //         return false;
+    //     }
+    // }
 }
