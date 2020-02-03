@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.wpiutil.math.MathUtil;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -85,14 +86,17 @@ public class Robot extends TimedRobot {
 
     // the obect that is the navX-MXP
     AHRS gyro = new AHRS(Port.kMXP);
-    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.2, 0.00035, 1.5, 0.0, 0, 0.0);
+    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.002, 0.0, 1.5, 0.0, 0, 0.0);
     static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
     static Gains rotationGains;
     static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(10, 10); // m/s and m/s/s
     ProfiledPIDController rotationPID;
 
     // The maximum distance from the destination considered close enough
-    private static final Double deadband = 0.5;
+    private static final double deadband = 0.5;
+
+    // The margin of error for angles when turning in auton
+    private static final double angleDeadband = 0.5;
 
     boolean isPracticeRobot; // true if DIO9 is pulled low
     DigitalInput DIO9 = new DigitalInput(9); // this should be pulled low on the 2016 Practice Robot
@@ -183,6 +187,7 @@ public class Robot extends TimedRobot {
         }
 
         rotationPID = new  ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
+        rotationPID.enableContinuousInput(-180, 180);
 
         initializeTalon(leftMaster, NeutralMode.Brake, false);
         initializeTalon(leftSlave, NeutralMode.Brake, false);
@@ -325,10 +330,12 @@ public class Robot extends TimedRobot {
             // Put default auto code here
             break;
         }
-        if (moveInches(12)) {
-            System.out.println("done");
+        // if (moveInches(12)) {
+        //     System.out.println("done");
+        // }
+        if (turnDegs(12)) {
+            System.out.println("finished");
         }
-
     }
 
     /**
@@ -405,8 +412,7 @@ public class Robot extends TimedRobot {
         // if (moveInches(-12)) {
         //     System.out.println("done");
         // }
-        System.out.println(7.0/2);
-        System.out.println(gyro.getAngle() +"    "+ rotationPID.calculate(gyro.getAngle(), 45));
+        //System.out.println(gyro.getAngle() +"    "+ rotationPID.calculate(gyro.getAngle(), 45));
     }
 
     public void testInit() {
@@ -420,7 +426,7 @@ public class Robot extends TimedRobot {
         return rightError.value == 0 && leftError.value == 0;
     }
 
-    // move an amount in s strieght line
+    // move an amount in s straight line
     boolean moveInches(float distance) {
         distance = -distance;
         rightMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
@@ -437,23 +443,24 @@ public class Robot extends TimedRobot {
         return encoderRotation * inches / circumference;
     }
 
-    // boolean turnRads(double radians){
-    //     return turnDegs(radians * 180/Math.PI);
-    // }
+    boolean turnRads(double radians){
+        return turnDegs(radians * 180/Math.PI);
+    }
 
-    // boolean turnDegs(double degrees){
-    //     degrees %= 360;
-    //     if (180<degrees){
-    //         degrees -= 180;
-    //     } else if (-180>degrees){
-    //         degrees += 180;
-    //     }
-    //     rightMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
-    //     leftMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
-    //     if (Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(distance)) < inchesToTicks(deadband)) {
-    //         return true;
-    //     } else {
-    //         return false;
-    //     }
-    // }
+    boolean turnDegs(double degrees){
+        degrees %= 360;
+        if (180<degrees){
+            degrees -= 180;
+        } else if (-180>degrees){
+            degrees += 180;
+        }
+        System.out.println(MathUtil.clamp(rotationPID.calculate(gyro.getAngle(), degrees),-1, 1));
+        rightMaster.set(ControlMode.PercentOutput, -rotationPID.calculate(gyro.getAngle(), degrees),-1, 1);
+        leftMaster.set(ControlMode.PercentOutput, rotationPID.calculate(gyro.getAngle(), degrees),-1, 1);
+        if (Math.abs(gyro.getAngle() - degrees) < angleDeadband) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
