@@ -86,10 +86,10 @@ public class Robot extends TimedRobot {
 
     // the obect that is the navX-MXP
     AHRS gyro = new AHRS(Port.kMXP);
-    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.04, 0.0, 0.0, 0.0, 0, 0.0);
+    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.0005, 0.002, 0.0, 0, 0.0);
     static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
     static Gains rotationGains;
-    static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(10, 10); // m/s and m/s/s
+    static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY); // m/s and m/s/s
     ProfiledPIDController rotationPID;
 
     // The maximum distance from the destination considered close enough
@@ -188,7 +188,7 @@ public class Robot extends TimedRobot {
 
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
                 ROTATIONAL_GAIN_CONSTRAINTS);
-        rotationPID.enableContinuousInput(-180, 180);
+        
 
         initializeTalon(leftMaster, NeutralMode.Brake, false);
         initializeTalon(leftSlave, NeutralMode.Brake, false);
@@ -205,7 +205,7 @@ public class Robot extends TimedRobot {
         rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
         leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
         System.out.println(resetEncoders());
-        // gyro.reset();
+        gyro.reset();
 
         drawbridge = new TwoStateMotor(0.4, -0.1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
         hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
@@ -311,6 +311,9 @@ public class Robot extends TimedRobot {
         System.out.println("Auto selected: " + autonSelected);
         resetEncoders();
         gyro.reset();
+        rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
+                ROTATIONAL_GAIN_CONSTRAINTS);
+        
     }
 
     /**
