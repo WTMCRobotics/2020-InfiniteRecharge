@@ -15,6 +15,7 @@ import com.ctre.phoenix.motorcontrol.StatusFrameEnhanced;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.kauailabs.navx.frc.AHRS;
 
+import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -160,6 +161,9 @@ public class Robot extends TimedRobot {
     boolean intakeButton; // true if the button that intakes is pressed
     boolean intakeOutButton; // true if the button that runs the intake in reverse is pressed
     boolean popperOutButton; // true if the button that reverses the popper is pressed.
+
+
+    Compressor compressor = new Compressor(1);
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -480,4 +484,18 @@ public class Robot extends TimedRobot {
             return false;
         }
     }
+
+    void UpdateCompressor()
+	{
+		// if not enough pressure
+		if(!compressor.GetPressureSwitchValue()) {
+			// Start compressor
+			compressor.Start();
+		}
+		// if enough pressure
+		else {
+			// Stop compressor
+			compressor.Stop();
+		}
+	} // END of UpdateCompressor() function
 }
