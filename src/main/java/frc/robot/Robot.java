@@ -86,10 +86,11 @@ public class Robot extends TimedRobot {
 
     // the obect that is the navX-MXP
     AHRS gyro = new AHRS(Port.kMXP);
-    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.0005, 0.002, 0.0, 0, 0.0);
+    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.0, 0.0, 0.0, 0, 0.0);
     static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
     static Gains rotationGains;
-    static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY); // m/s and m/s/s
+    static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(Double.POSITIVE_INFINITY,
+            Double.POSITIVE_INFINITY); // m/s and m/s/s
     ProfiledPIDController rotationPID;
 
     // The maximum distance from the destination considered close enough
@@ -188,7 +189,6 @@ public class Robot extends TimedRobot {
 
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
                 ROTATIONAL_GAIN_CONSTRAINTS);
-        
 
         initializeTalon(leftMaster, NeutralMode.Brake, false);
         initializeTalon(leftSlave, NeutralMode.Brake, false);
@@ -230,7 +230,7 @@ public class Robot extends TimedRobot {
         masterTalon.configFactoryDefault();
 
         /* Configure Sensor Source for Pirmary PID */
-        masterTalon.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder, PID_LOOP_IDX, TIMEOUT_MS);
+        masterTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, PID_LOOP_IDX, TIMEOUT_MS);
 
         /*
          * set deadband to super small 0.001 (0.1 %). The default deadband is 0.04 (4 %)
@@ -313,7 +313,7 @@ public class Robot extends TimedRobot {
         gyro.reset();
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
                 ROTATIONAL_GAIN_CONSTRAINTS);
-        
+
     }
 
     /**
@@ -460,15 +460,23 @@ public class Robot extends TimedRobot {
         } else if (-180 > degrees) {
             degrees += 360;
         }
-        System.out.println(rotationPID.getPositionError() + "    "
-                + MathUtil.clamp(rotationPID.calculate(gyro.getAngle(), degrees), -1, 1));
-        rightMaster.set(ControlMode.PercentOutput,
-                MathUtil.clamp(rotationPID.calculate(gyro.getAngle(), degrees), -1, 1));
-        leftMaster.set(ControlMode.PercentOutput,
-                -MathUtil.clamp(rotationPID.calculate(gyro.getAngle(), degrees), -1, 1));
-        if (Math.abs(gyro.getAngle() - degrees) < angleDeadband) {
+        double output = MathUtil.clamp(rotationPID.calculate(gyro.getAngle(), degrees), -1, 1);
+        System.out.println(rotationPID.getPositionError() + "    " + output);
+        if (output > 0) {
+            output += 0.10;
+        } else if (output < 0) {
+            output -= 0.10;
+        }
+        System.out.println(rightMaster.getSelectedSensorVelocity());
+        if (Math.abs(gyro.getAngle() - degrees) < angleDeadband
+                && Math.abs(rightMaster.getSelectedSensorVelocity()) < 1024/4
+                && Math.abs(leftMaster.getSelectedSensorVelocity()) < 1024/4) {
+            rightMaster.set(ControlMode.PercentOutput, 0);
+            leftMaster.set(ControlMode.PercentOutput, 0);
             return true;
         } else {
+            rightMaster.set(ControlMode.PercentOutput, output);
+            leftMaster.set(ControlMode.PercentOutput, -output);
             return false;
         }
     }
