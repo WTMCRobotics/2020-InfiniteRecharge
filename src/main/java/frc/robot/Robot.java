@@ -488,14 +488,14 @@ public class Robot extends TimedRobot {
     void UpdateCompressor()
 	{
 		// if not enough pressure
-		if(!compressor.GetPressureSwitchValue()) {
+		if(!compressor.getPressureSwitchValue()) {
 			// Start compressor
-			compressor.Start();
+			compressor.start();
 		}
 		// if enough pressure
 		else {
 			// Stop compressor
-			compressor.Stop();
+			compressor.stop();
 		}
 	} // END of UpdateCompressor() function
 }
