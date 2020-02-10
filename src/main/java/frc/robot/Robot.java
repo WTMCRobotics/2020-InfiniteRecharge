@@ -17,7 +17,9 @@ import com.kauailabs.navx.frc.AHRS;
 
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.SPI.Port;
@@ -162,8 +164,22 @@ public class Robot extends TimedRobot {
     boolean intakeOutButton; // true if the button that runs the intake in reverse is pressed
     boolean popperOutButton; // true if the button that reverses the popper is pressed.
 
+    // ##########################################
+    // Pneumatics related constants and variables
+    // ##########################################
 
+    static final int PCM_OTHER_IN = 1;
+    static final int PCM_OTHER_OUT = 0;
+
+    static final int PCM_RATCHET = 2;
+    
+	boolean extended = false;
+    boolean retracted = true;
+    
     Compressor compressor = new Compressor(1);
+
+    DoubleSolenoid otherSol = new DoubleSolenoid(1, PCM_OTHER_IN, PCM_OTHER_OUT);
+    Solenoid hangSol = new Solenoid(1, PCM_RATCHET);
 
     /**
      * This function is run when the robot is first started up and should be used
@@ -284,10 +300,9 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-        drawbridge.set(drawbridgeButton);
         drawbridge.tick();
 
-        hang.set(hangButton);
+        
         hang.tick();
 
         // System.out.println("rightMaster.GetSelectedSensorPosition(): " +
@@ -343,6 +358,7 @@ public class Robot extends TimedRobot {
         // if (moveInches(12)) {
         // System.out.println("done");
         // }
+
         if (turnDegs(180)) {
             System.out.println("finished");
         }
@@ -374,6 +390,11 @@ public class Robot extends TimedRobot {
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         hangButton = 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
         popperOutButton = xboxController.getRawButton(R_SHOULDER);
+
+        
+        hang.set(hangButton);
+        setPistonExtended(PCM_RATCHET, hangButton);
+        drawbridge.set(drawbridgeButton);
 
         if (arcadeButton) {
             ArcadeDrive = true;
@@ -497,5 +518,42 @@ public class Robot extends TimedRobot {
 			// Stop compressor
 			compressor.stop();
 		}
-	} // END of UpdateCompressor() function
+    } // END of UpdateCompressor() functionom
+    
+    void setPistonExtended(int pistonID, boolean value){
+		switch(pistonID) {
+		
+			case PCM_RATCHET:
+				// System.out.println("FRONT EXTENDED");  
+				// System.out.println("VALUE: " + value);
+				// if(value) {
+				// 	if (retracted) {
+				// 		hangSol.set(true);
+				// 		extended = true;
+				// 		retracted = false;
+				// 		System.out.println("Extending");   
+				// 	}
+				// } else {
+				// 	if (extended) {
+				// 		hangSol.set(false);
+				// 		extended = false;
+				// 		retracted = true;
+				// 		System.out.println("Retracting");
+                //     }
+                // }
+
+                hangSol.set(value);
+                
+				break;
+			
+			
+			case PCM_OTHER_IN:
+				if(value) {
+					otherSol.set(DoubleSolenoid.Value.kForward);
+				} else {
+					otherSol.set(DoubleSolenoid.Value.kReverse);
+				}
+				break;
+		}
+	}
 }
