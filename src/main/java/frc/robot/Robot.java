@@ -71,7 +71,6 @@ public class Robot extends TimedRobot {
     TalonSRX leftSlave = new TalonSRX(LEFT_SLAVE_ID);
     TalonSRX rightMaster = new TalonSRX(RIGHT_MASTER_ID);
     TalonSRX rightSlave = new TalonSRX(RIGHT_SLAVE_ID);
-    TalonSRX drawbridgeMotor = new TalonSRX(DRAWBRIDGE_MOTOR_ID);
     TalonSRX hangMotor = new TalonSRX(WINCH_MOTOR_ID);
     TalonSRX intake = new TalonSRX(INTAKE_ID);
     TalonSRX popper = new TalonSRX(POPPER_ID);
@@ -136,7 +135,6 @@ public class Robot extends TimedRobot {
     static final int HANG_DEFAULT_SENSOR = 3; // sensor for when the winch is retracted
 
     // declares objects for the TwoStateMotor class
-    TwoStateMotor drawbridge;
     TwoStateMotor hang;
 
     // ##########################################
@@ -168,8 +166,8 @@ public class Robot extends TimedRobot {
     // Pneumatics related constants and variables
     // ##########################################
 
-    static final int PCM_OTHER_IN = 1;
-    static final int PCM_OTHER_OUT = 0;
+    static final int PCM_DRAWBRIDGE_IN = 1;
+    static final int PCM_DRAWBRIDGE_OUT = 0;
 
     static final int PCM_RATCHET = 2;
     
@@ -178,7 +176,7 @@ public class Robot extends TimedRobot {
     
     Compressor compressor = new Compressor(1);
 
-    DoubleSolenoid otherSol = new DoubleSolenoid(1, PCM_OTHER_IN, PCM_OTHER_OUT);
+    DoubleSolenoid DrawbridgeSol = new DoubleSolenoid(1, PCM_DRAWBRIDGE_IN, PCM_DRAWBRIDGE_OUT);
     Solenoid hangSol = new Solenoid(1, PCM_RATCHET);
 
     /**
@@ -214,7 +212,6 @@ public class Robot extends TimedRobot {
         initializeTalon(leftSlave, NeutralMode.Brake, false);
         initializeTalon(rightMaster, NeutralMode.Brake, true);
         initializeTalon(rightSlave, NeutralMode.Brake, true);
-        initializeTalon(drawbridgeMotor, NeutralMode.Brake, false);
         initializeTalon(hangMotor, NeutralMode.Brake, false);
         initializeTalon(intake, NeutralMode.Brake, false);
         initializeTalon(popper, NeutralMode.Brake, false);
@@ -227,7 +224,6 @@ public class Robot extends TimedRobot {
         System.out.println(resetEncoders());
         gyro.reset();
 
-        drawbridge = new TwoStateMotor(0.4, -0.1, drawbridgeMotor, DRAWBRIDGE_DEFAULT_SENSOR, DRAWBRIDGE_SET_SENSOR);
         hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
     }
 
@@ -300,7 +296,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-        drawbridge.tick();
+
 
         
         hang.tick();
@@ -385,16 +381,18 @@ public class Robot extends TimedRobot {
         rightjoyX = xboxController.getX(GenericHID.Hand.kRight);
         arcadeButton = xboxController.getRawButton(START);
         tankButton = xboxController.getRawButton(SELECT);
+        drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         intakeOutButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
         intakeButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
-        drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         hangButton = 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
         popperOutButton = xboxController.getRawButton(R_SHOULDER);
-
+        
+        setPistonExtended(PCM_DRAWBRIDGE_IN, drawbridgeButton);
+    
         
         hang.set(hangButton);
         setPistonExtended(PCM_RATCHET, hangButton);
-        drawbridge.set(drawbridgeButton);
+
 
         if (arcadeButton) {
             ArcadeDrive = true;
@@ -547,11 +545,12 @@ public class Robot extends TimedRobot {
 				break;
 			
 			
-			case PCM_OTHER_IN:
+            case PCM_DRAWBRIDGE_IN:
+            case PCM_DRAWBRIDGE_OUT:
 				if(value) {
-					otherSol.set(DoubleSolenoid.Value.kForward);
+					DrawbridgeSol.set(DoubleSolenoid.Value.kForward);
 				} else {
-					otherSol.set(DoubleSolenoid.Value.kReverse);
+					DrawbridgeSol.set(DoubleSolenoid.Value.kReverse);
 				}
 				break;
 		}
