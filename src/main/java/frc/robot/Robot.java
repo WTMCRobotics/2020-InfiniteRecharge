@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Solenoid;
+import edu.wpi.first.wpilibj.SolenoidBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.SPI.Port;
@@ -61,8 +62,7 @@ public class Robot extends TimedRobot {
     static final int LEFT_SLAVE_ID = 3;
     static final int RIGHT_MASTER_ID = 4;
     static final int RIGHT_SLAVE_ID = 5;
-    static final int DRAWBRIDGE_MOTOR_ID = 11;
-    static final int WINCH_MOTOR_ID = 7;
+    static final int WINCH_MOTOR_ID = 11;
     static final int INTAKE_ID = 12;
     static final int POPPER_ID = 10;
 
@@ -129,10 +129,8 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // DIO
-    static final int DRAWBRIDGE_SET_SENSOR = 0; // sensor for when the drawbride is down
-    static final int DRAWBRIDGE_DEFAULT_SENSOR = 1; // sensor for when the drawbride is up
-    static final int HANG_SET_SENSOR = 2; // sensor for when the winch is extended
-    static final int HANG_DEFAULT_SENSOR = 3; // sensor for when the winch is retracted
+    static final int HANG_SET_SENSOR = 0; // sensor for when the winch is extended
+    static final int HANG_DEFAULT_SENSOR = 1; // sensor for when the winch is retracted
 
     // declares objects for the TwoStateMotor class
     TwoStateMotor hang;
@@ -224,7 +222,7 @@ public class Robot extends TimedRobot {
         System.out.println(resetEncoders());
         gyro.reset();
 
-        hang = new TwoStateMotor(-1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
+        hang = new TwoStateMotor( 0.5, -0.1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
     }
 
     public void initializeTalon(TalonSRX talon, NeutralMode neutralMode, boolean inverted) {
@@ -387,12 +385,12 @@ public class Robot extends TimedRobot {
         hangButton = 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
         popperOutButton = xboxController.getRawButton(R_SHOULDER);
         
-        setPistonExtended(PCM_DRAWBRIDGE_IN, drawbridgeButton);
+        setPistonExtended(DrawbridgeSol, drawbridgeButton);
     
         
         hang.set(hangButton);
-        setPistonExtended(PCM_RATCHET, hangButton);
-
+        setPistonExtended(hangSol, hangButton);
+        
 
         if (arcadeButton) {
             ArcadeDrive = true;
@@ -518,41 +516,16 @@ public class Robot extends TimedRobot {
 		}
     } // END of UpdateCompressor() functionom
     
-    void setPistonExtended(int pistonID, boolean value){
-		switch(pistonID) {
-		
-			case PCM_RATCHET:
-				// System.out.println("FRONT EXTENDED");  
-				// System.out.println("VALUE: " + value);
-				// if(value) {
-				// 	if (retracted) {
-				// 		hangSol.set(true);
-				// 		extended = true;
-				// 		retracted = false;
-				// 		System.out.println("Extending");   
-				// 	}
-				// } else {
-				// 	if (extended) {
-				// 		hangSol.set(false);
-				// 		extended = false;
-				// 		retracted = true;
-				// 		System.out.println("Retracting");
-                //     }
-                // }
+    void setPistonExtended(SolenoidBase solenoid, boolean value){
+        if(solenoid instanceof Solenoid){
+            ((Solenoid)solenoid).set(value);
+        } else if(solenoid instanceof DoubleSolenoid){
+            if(value) {
+                ((DoubleSolenoid)solenoid).set(DoubleSolenoid.Value.kForward);
+            }else{
+                ((DoubleSolenoid)solenoid).set(DoubleSolenoid.Value.kReverse);
+            }
 
-                hangSol.set(value);
-                
-				break;
-			
-			
-            case PCM_DRAWBRIDGE_IN:
-            case PCM_DRAWBRIDGE_OUT:
-				if(value) {
-					DrawbridgeSol.set(DoubleSolenoid.Value.kForward);
-				} else {
-					DrawbridgeSol.set(DoubleSolenoid.Value.kReverse);
-				}
-				break;
-		}
+        }
 	}
 }
