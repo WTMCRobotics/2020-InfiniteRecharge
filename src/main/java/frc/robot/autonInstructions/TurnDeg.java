@@ -12,8 +12,7 @@ public class TurnDeg extends Instruction {
 
 	@Override
 	public boolean doit(Robot robot) {
-			robot.turnDegs(degrees);
-		return true;
+		return robot.turnDegs(degrees);
 	}
 
 }

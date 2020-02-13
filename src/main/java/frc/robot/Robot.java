@@ -366,12 +366,8 @@ public class Robot extends TimedRobot {
         //     System.out.println("finished");
         // }
 
-        if(!autonInstructions.isEmpty()){
-			if(autonInstructions.get(0).doit(this)){
+        while(!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)){
 				autonInstructions.remove(0);
-			}
-		} else {
-			System.out.println("finnished following auton instructions");
 		}
     }
 

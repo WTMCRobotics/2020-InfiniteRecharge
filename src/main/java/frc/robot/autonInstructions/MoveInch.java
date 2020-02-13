@@ -12,8 +12,7 @@ public class MoveInch extends Instruction {
 
 	@Override
 	public boolean doit(Robot robot) {
-			robot.moveInches(inches);
-		return true;
+		return robot.moveInches(inches);
 	}
 
 }
