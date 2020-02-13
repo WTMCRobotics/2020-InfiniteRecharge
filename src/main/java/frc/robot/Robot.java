@@ -358,14 +358,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousPeriodic() {
-        // if (moveInches(12)) {
-        // System.out.println("done");
-        // }
-
-        // if (turnDegs(180)) {
-        //     System.out.println("finished");
-        // }
-
         while(!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)){
 				autonInstructions.remove(0);
 		}
