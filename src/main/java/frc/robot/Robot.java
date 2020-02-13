@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
+
 import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
@@ -27,9 +29,9 @@ import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpiutil.math.MathUtil;
+import frc.robot.autonInstructions.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -52,6 +54,8 @@ public class Robot extends TimedRobot {
     // SendableChooser<String> puts a dropdown menu on the dashboard
     private final SendableChooser<String> AUTON_CHOOSER = new SendableChooser<>();
     private String autonSelected; // the auton mode chossen by the dashboard
+
+    ArrayList<Instruction> autonInstructions = new ArrayList<Instruction>();
 
     // ##########################################
     // talon related constants and variables
@@ -324,16 +328,7 @@ public class Robot extends TimedRobot {
         System.out.println("Auto selected: " + autonSelected);
         resetEncoders();
         gyro.reset();
-        rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
-                ROTATIONAL_GAIN_CONSTRAINTS);
-
-    }
-
-    /**
-     * This function is called periodically during autonomous.
-     */
-    @Override
-    public void autonomousPeriodic() {
+        rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
         switch (autonSelected) {
         case RIGHT_AUTON_POS:
             // Put custom auto code here
@@ -349,13 +344,35 @@ public class Robot extends TimedRobot {
             // Put default auto code here
             break;
         }
+        autonInstructions.add(new MoveInch(3));
+        autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+		autonInstructions.add(new WaitMs(3000));
+        autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
+		autonInstructions.add(new TurnDeg(45));
+		autonInstructions.add(new MoveInch(-5));
+
+    }
+
+    /**
+     * This function is called periodically during autonomous.
+     */
+    @Override
+    public void autonomousPeriodic() {
         // if (moveInches(12)) {
         // System.out.println("done");
         // }
 
-        if (turnDegs(180)) {
-            System.out.println("finished");
-        }
+        // if (turnDegs(180)) {
+        //     System.out.println("finished");
+        // }
+
+        if(!autonInstructions.isEmpty()){
+			if(autonInstructions.get(0).doit(this)){
+				autonInstructions.remove(0);
+			}
+		} else {
+			System.out.println("finnished following auton instructions");
+		}
     }
 
     /**
@@ -454,11 +471,11 @@ public class Robot extends TimedRobot {
     }
 
     // move an amount in s straight line
-    boolean moveInches(float distance) {
-        distance = -distance;
-        rightMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
-        leftMaster.set(ControlMode.MotionMagic, inchesToTicks(distance));
-        if (Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(distance)) < inchesToTicks(deadband)) {
+    public boolean moveInches(double inches) {
+        inches = -inches;
+        rightMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
+        leftMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
+        if (Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(deadband)) {
             return true;
         } else {
             return false;
@@ -474,7 +491,7 @@ public class Robot extends TimedRobot {
         return turnDegs(radians * 180 / Math.PI);
     }
 
-    boolean turnDegs(double degrees) {
+    public boolean turnDegs(double degrees) {
         degrees %= 360;
         if (180 < degrees) {
             degrees -= 360;
@@ -516,7 +533,7 @@ public class Robot extends TimedRobot {
 		}
     } // END of UpdateCompressor() functionom
     
-    void setPistonExtended(SolenoidBase solenoid, boolean value){
+    public void setPistonExtended(SolenoidBase solenoid, boolean value){
         if(solenoid instanceof Solenoid){
             ((Solenoid)solenoid).set(value);
         } else if(solenoid instanceof DoubleSolenoid){
