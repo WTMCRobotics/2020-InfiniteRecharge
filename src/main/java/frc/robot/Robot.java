@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SolenoidBase;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -107,6 +108,7 @@ public class Robot extends TimedRobot {
 
     boolean isPracticeRobot; // true if DIO9 is pulled low
     DigitalInput DIO9 = new DigitalInput(9); // this should be pulled low on the 2016 Practice Robot
+    DigitalInput DIO4 = new DigitalInput(4);
     double circumference; // this value will be updated with the circumference of the drive wheels
 
     boolean ArcadeDrive = true; // variable stores weather to use Arcade or tank style controls
@@ -298,9 +300,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
-
-
-        
+        System.out.println("DigitalInput(4): " + DIO4.get());        
         hang.tick();
 
         // System.out.println("rightMaster.GetSelectedSensorPosition(): " +
@@ -344,9 +344,9 @@ public class Robot extends TimedRobot {
             // Put default auto code here
             break;
         }
-        autonInstructions.add(new MoveInch(3));
+        autonInstructions.add(new MoveInch(7));
         autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
-		autonInstructions.add(new WaitMs(3000));
+        autonInstructions.add(new WaitMs(2000));
         autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
 		autonInstructions.add(new TurnDeg(45));
 		autonInstructions.add(new MoveInch(-5));
@@ -358,14 +358,6 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousPeriodic() {
-        // if (moveInches(12)) {
-        // System.out.println("done");
-        // }
-
-        // if (turnDegs(180)) {
-        //     System.out.println("finished");
-        // }
-
         while(!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)){
 				autonInstructions.remove(0);
 		}
@@ -395,7 +387,8 @@ public class Robot extends TimedRobot {
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         intakeOutButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
         intakeButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
-        hangButton = 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
+        hangButton = gHeroController.getName().isEmpty() ? false : 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
+
         popperOutButton = xboxController.getRawButton(R_SHOULDER);
         
         setPistonExtended(DrawbridgeSol, drawbridgeButton);
@@ -460,7 +453,7 @@ public class Robot extends TimedRobot {
     }
 
     // sets encoder position to zero
-    boolean resetEncoders() {
+    public boolean resetEncoders() {
         ErrorCode rightError = rightMaster.setSelectedSensorPosition(0);
         ErrorCode leftError = leftMaster.setSelectedSensorPosition(0);
         return rightError.value == 0 && leftError.value == 0;
