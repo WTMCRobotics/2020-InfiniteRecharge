@@ -334,7 +334,22 @@ public class Robot extends TimedRobot {
             // Put custom auto code here
             break;
         case CENTER_AUTON_POS:
-            // Put custom auto code here
+        autonInstructions.add(new MoveInch(10));
+        autonInstructions.add(new TurnDeg(-90));
+        autonInstructions.add(new MoveInch(56));
+        autonInstructions.add(new TurnDeg(-90));
+        autonInstructions.add(new MoveInch(10));
+        // put StartPush here
+        autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+        autonInstructions.add(new WaitMs(3000));
+        autonInstructions.add(new MoveInch(-120));
+        
+
+
+
+
+
+
             break;
         case LEFT_AUTON_POS:
             // Put custom auto code here
