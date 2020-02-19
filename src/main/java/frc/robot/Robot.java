@@ -47,18 +47,18 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // auton modes
-    private static final String RIGHT_AUTON_POS = "Right";
-    private static final String CENTER_AUTON_POS = "Center";
-    private static final String LEFT_AUTON_POS = "Left";
+    private static final int RIGHT_AUTON_POS = 3;
+    private static final int CENTER_AUTON_POS = 2;
+    private static final int LEFT_AUTON_POS = 1;
     // SendableChooser<String> puts a dropdown menu on the dashboard
-    private final SendableChooser<String> STARTING_POS_CHOOSER = new SendableChooser<>();
-    private String startingPosSelected; // the auton mode chossen by the dashboard
+    private final SendableChooser<Integer> STARTING_POS_CHOOSER = new SendableChooser<>();
+    private int startingPosSelected; // the auton mode chossen by the dashboard
     // SendableChooser<String> puts a dropdown menu on the dashboard
-    private final SendableChooser<String> GO_DIRECTLY_CHOOSER = new SendableChooser<>();
-    private String goDirectlyPosSelected; // the auton mode chossen by the dashboard
+    private final SendableChooser<Boolean> GO_DIRECTLY_CHOOSER = new SendableChooser<>();
+    private boolean goDirectlyPosSelected; // the auton mode chossen by the dashboard
     // SendableChooser<String> puts a dropdown menu on the dashboard
-    private final SendableChooser<String> TARGET_BALL_POS_CHOOSER = new SendableChooser<>();
-    private String TargetBallPosSelected; // the auton mode chossen by the dashboard
+    private final SendableChooser<Integer> TARGET_BALL_POS_CHOOSER = new SendableChooser<>();
+    private int TargetBallPosSelected; // the auton mode chossen by the dashboard
 
     boolean shouldGoDirectlyToScore = true;
 
@@ -207,6 +207,18 @@ public class Robot extends TimedRobot {
         STARTING_POS_CHOOSER.addOption("Center (PS2)", CENTER_AUTON_POS);
         STARTING_POS_CHOOSER.addOption("Left (PS1)", LEFT_AUTON_POS);
         SmartDashboard.putData("Player Station", STARTING_POS_CHOOSER);
+
+        
+        GO_DIRECTLY_CHOOSER.addOption("yes", true);
+        GO_DIRECTLY_CHOOSER.addOption("no (PS2)", false);
+        SmartDashboard.putData("Player Station", GO_DIRECTLY_CHOOSER);
+
+        
+        TARGET_BALL_POS_CHOOSER.addOption("Right (PS3)", RIGHT_AUTON_POS);
+        TARGET_BALL_POS_CHOOSER.addOption("Center (PS2)", CENTER_AUTON_POS);
+        TARGET_BALL_POS_CHOOSER.addOption("Left (PS1)", LEFT_AUTON_POS);
+        SmartDashboard.putData("Player Station", TARGET_BALL_POS_CHOOSER);
+
         System.out.println("this is to test the drbug console and robotInit()");
 
         isPracticeRobot = !DIO9.get();
@@ -337,7 +349,11 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         startingPosSelected = STARTING_POS_CHOOSER.getSelected();
-        System.out.println("Auto selected: " + startingPosSelected);
+        System.out.println("starting Pos selected: " + startingPosSelected);
+        goDirectlyPosSelected = GO_DIRECTLY_CHOOSER.getSelected();
+        System.out.println("go directly selected: " + goDirectlyPosSelected);
+        TargetBallPosSelected = TARGET_BALL_POS_CHOOSER.getSelected();
+        System.out.println("target ball Pos selected: " + TargetBallPosSelected);
         resetEncoders();
         gyro.reset();
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
