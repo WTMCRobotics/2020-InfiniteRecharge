@@ -12,7 +12,11 @@ public class TurnDeg extends Instruction {
 
 	@Override
 	public boolean doit(Robot robot) {
-		return robot.turnDegs(degrees);
+		if(robot.turnDegs(degrees) && robot.resetEncoders()){
+			System.out.println("done");
+			return true;
+		}
+		return false;
 	}
 
 }

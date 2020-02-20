@@ -49,10 +49,10 @@ class TwoStateMotor {
         isSet = setSensor.get();
         if (isSet && direction == 1 || isDefault && direction == -1) {
             motor.set(ControlMode.PercentOutput, (direction * speed) + speedOffset);
-            System.out.println("moving at "+ ((direction * speed) + speedOffset));
+            //System.out.println("moving at "+ ((direction * speed) + speedOffset));
         } else {
             motor.set(ControlMode.PercentOutput, 0);
-            System.out.println("stopped");
+            //System.out.println("stopped");
         }
     }
 

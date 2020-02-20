@@ -15,12 +15,13 @@ public class WaitMs extends Instruction {
 
 	@Override
 	public boolean doit(Robot robot) {
-		System.out.println("waiting " + milliseconds / 1000 + " seconds");
+		
 		if (startTime == -1) {
-			startTime = RobotController.getFPGATime();
+			System.out.println("waiting " + milliseconds / 1000 + " seconds");
+			startTime = RobotController.getFPGATime() / 1000;
 			return false;
 		} else {
-			return startTime + milliseconds <= RobotController.getFPGATime();
+			return startTime + milliseconds <= RobotController.getFPGATime() / 1000;
 		}
 	}
 

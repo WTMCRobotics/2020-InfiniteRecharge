@@ -47,15 +47,31 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // auton modes
-    private static final String DEFAULT_AUTON_POS = "Default";
-    private static final String RIGHT_AUTON_POS = "Right";
-    private static final String CENTER_AUTON_POS = "Center";
-    private static final String LEFT_AUTON_POS = "Left";
+    private static final int RIGHT_AUTON_POS = 3;
+    private static final int CENTER_AUTON_POS = 2;
+    private static final int LEFT_AUTON_POS = 1;
     // SendableChooser<String> puts a dropdown menu on the dashboard
-    private final SendableChooser<String> AUTON_CHOOSER = new SendableChooser<>();
-    private String autonSelected; // the auton mode chossen by the dashboard
+    private final SendableChooser<Integer> STARTING_POS_CHOOSER = new SendableChooser<>();
+    private int startingPosSelected; // the auton mode chossen by the dashboard
+    // SendableChooser<String> puts a dropdown menu on the dashboard
+    private final SendableChooser<Boolean> GO_DIRECTLY_CHOOSER = new SendableChooser<>();
+    private boolean goDirectlyPosSelected; // the auton mode chossen by the dashboard
+    // SendableChooser<String> puts a dropdown menu on the dashboard
+    private final SendableChooser<Integer> TARGET_BALL_POS_CHOOSER = new SendableChooser<>();
+    private int TargetBallPosSelected; // the auton mode chossen by the dashboard
+
+    boolean shouldGoDirectlyToScore = true;
+
+    int startingPosition = 0;
+    static final int STARTING_POSITION_LEFT = 1;
+    static final int STARTING_POSITION_CENTER = 2;
+    static final int STARTING_POSITION_RIGHT = 3;
+    int targetPickupLocation = 0;
 
     ArrayList<Instruction> autonInstructions = new ArrayList<Instruction>();
+
+    DigitalInput DIO8 = new DigitalInput(8); // this should be pulled low on the 2016 Practice Robot
+    DigitalInput DIO7 = new DigitalInput(7); // this should be pulled low on the 2016 Practice Robot
 
     // ##########################################
     // talon related constants and variables
@@ -187,11 +203,22 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        AUTON_CHOOSER.setDefaultOption("Default Auton", DEFAULT_AUTON_POS);
-        AUTON_CHOOSER.addOption("Right", RIGHT_AUTON_POS);
-        AUTON_CHOOSER.addOption("Center", CENTER_AUTON_POS);
-        AUTON_CHOOSER.addOption("Left", LEFT_AUTON_POS);
-        SmartDashboard.putData("Auto choices", AUTON_CHOOSER);
+        STARTING_POS_CHOOSER.addOption("Right (PS3)", RIGHT_AUTON_POS);
+        STARTING_POS_CHOOSER.addOption("Center (PS2)", CENTER_AUTON_POS);
+        STARTING_POS_CHOOSER.addOption("Left (PS1)", LEFT_AUTON_POS);
+        SmartDashboard.putData("Player Station", STARTING_POS_CHOOSER);
+
+        
+        GO_DIRECTLY_CHOOSER.addOption("yes", true);
+        GO_DIRECTLY_CHOOSER.addOption("no (PS2)", false);
+        SmartDashboard.putData("Player Station", GO_DIRECTLY_CHOOSER);
+
+        
+        TARGET_BALL_POS_CHOOSER.addOption("Right (PS3)", RIGHT_AUTON_POS);
+        TARGET_BALL_POS_CHOOSER.addOption("Center (PS2)", CENTER_AUTON_POS);
+        TARGET_BALL_POS_CHOOSER.addOption("Left (PS1)", LEFT_AUTON_POS);
+        SmartDashboard.putData("Player Station", TARGET_BALL_POS_CHOOSER);
+
         System.out.println("this is to test the drbug console and robotInit()");
 
         isPracticeRobot = !DIO9.get();
@@ -297,10 +324,7 @@ public class Robot extends TimedRobot {
      * and SmartDashboard integrated updating.
      */
     @Override
-    public void robotPeriodic() {
-
-
-        
+    public void robotPeriodic() {        
         hang.tick();
 
         // System.out.println("rightMaster.GetSelectedSensorPosition(): " +
@@ -319,34 +343,53 @@ public class Robot extends TimedRobot {
      *
      * <p>
      * You can add additional auto modes by adding additional comparisons to the
-     * switch structure below with additional strings. If using the SendableChooser
+     * STARTING_POSITION structure below with additional strings. If using the SendableChooser
      * make sure to add them to the chooser code above as well.
      */
     @Override
     public void autonomousInit() {
-        autonSelected = AUTON_CHOOSER.getSelected();
-        System.out.println("Auto selected: " + autonSelected);
+        startingPosSelected = STARTING_POS_CHOOSER.getSelected();
+        System.out.println("starting Pos selected: " + startingPosSelected);
+        goDirectlyPosSelected = GO_DIRECTLY_CHOOSER.getSelected();
+        System.out.println("go directly selected: " + goDirectlyPosSelected);
+        TargetBallPosSelected = TARGET_BALL_POS_CHOOSER.getSelected();
+        System.out.println("target ball Pos selected: " + TargetBallPosSelected);
         resetEncoders();
         gyro.reset();
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
-        switch (autonSelected) {
+        switch (startingPosSelected) {
         case RIGHT_AUTON_POS:
             // Put custom auto code here
             break;
         case CENTER_AUTON_POS:
-            // Put custom auto code here
+        autonInstructions.add(new MoveInch(10));
+        autonInstructions.add(new TurnDeg(-90));
+        autonInstructions.add(new MoveInch(56));
+        autonInstructions.add(new TurnDeg(-90));
+        autonInstructions.add(new MoveInch(10));
+        // put StartPush here
+        autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+        autonInstructions.add(new WaitMs(3000));
+        autonInstructions.add(new MoveInch(-120));
+        
+
+
+
+
+
+
             break;
         case LEFT_AUTON_POS:
             // Put custom auto code here
             break;
-        case DEFAULT_AUTON_POS:
         default:
             // Put default auto code here
             break;
         }
-        autonInstructions.add(new MoveInch(3));
+
+        autonInstructions.add(new MoveInch(7));
         autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
-		autonInstructions.add(new WaitMs(3000));
+        autonInstructions.add(new WaitMs(2000));
         autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
 		autonInstructions.add(new TurnDeg(45));
 		autonInstructions.add(new MoveInch(-5));
@@ -387,7 +430,8 @@ public class Robot extends TimedRobot {
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         intakeOutButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
         intakeButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
-        hangButton = 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
+        hangButton = gHeroController.getName().isEmpty() ? false : 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
+
         popperOutButton = xboxController.getRawButton(R_SHOULDER);
         
         setPistonExtended(DrawbridgeSol, drawbridgeButton);
@@ -452,7 +496,7 @@ public class Robot extends TimedRobot {
     }
 
     // sets encoder position to zero
-    boolean resetEncoders() {
+    public boolean resetEncoders() {
         ErrorCode rightError = rightMaster.setSelectedSensorPosition(0);
         ErrorCode leftError = leftMaster.setSelectedSensorPosition(0);
         return rightError.value == 0 && leftError.value == 0;
