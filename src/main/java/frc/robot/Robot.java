@@ -415,10 +415,9 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousPeriodic() {
-        System.out.println(targetPickupLocation);
-        // while(!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)){
-        // autonInstructions.remove(0);
-        // }
+        while(!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)){
+				autonInstructions.remove(0);
+		}
     }
 
     /**
