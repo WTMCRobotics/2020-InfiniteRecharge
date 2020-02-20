@@ -50,6 +50,12 @@ public class Robot extends TimedRobot {
     private static final int RIGHT_AUTON_POS = 3;
     private static final int CENTER_AUTON_POS = 2;
     private static final int LEFT_AUTON_POS = 1;
+
+    private static final int RIGHT_RENDEZVOUS = 1;
+    private static final int LEFT_RENDEZVOUS = 2;
+    private static final int TRENCH = 3;
+    private static final int LOADING_ZONE = 4;
+
     // SendableChooser<String> puts a dropdown menu on the dashboard
     private final SendableChooser<Integer> STARTING_POS_CHOOSER = new SendableChooser<>();
     private int startingPosSelected; // the auton mode chossen by the dashboard
@@ -87,9 +93,9 @@ public class Robot extends TimedRobot {
     static final int POPPER_ID = 10;
 
     // creates objects for the talons
-    TalonSRX leftMaster = new TalonSRX(LEFT_MASTER_ID);
+    public TalonSRX leftMaster = new TalonSRX(LEFT_MASTER_ID);
     TalonSRX leftSlave = new TalonSRX(LEFT_SLAVE_ID);
-    TalonSRX rightMaster = new TalonSRX(RIGHT_MASTER_ID);
+    public TalonSRX rightMaster = new TalonSRX(RIGHT_MASTER_ID);
     TalonSRX rightSlave = new TalonSRX(RIGHT_SLAVE_ID);
     TalonSRX hangMotor = new TalonSRX(WINCH_MOTOR_ID);
     TalonSRX intake = new TalonSRX(INTAKE_ID);
@@ -188,10 +194,10 @@ public class Robot extends TimedRobot {
     static final int PCM_DRAWBRIDGE_OUT = 0;
 
     static final int PCM_RATCHET = 2;
-    
-	boolean extended = false;
+
+    boolean extended = false;
     boolean retracted = true;
-    
+
     Compressor compressor = new Compressor(1);
 
     DoubleSolenoid DrawbridgeSol = new DoubleSolenoid(1, PCM_DRAWBRIDGE_IN, PCM_DRAWBRIDGE_OUT);
@@ -208,16 +214,15 @@ public class Robot extends TimedRobot {
         STARTING_POS_CHOOSER.addOption("Left (PS1)", LEFT_AUTON_POS);
         SmartDashboard.putData("Player Station", STARTING_POS_CHOOSER);
 
-        
         GO_DIRECTLY_CHOOSER.addOption("yes", true);
-        GO_DIRECTLY_CHOOSER.addOption("no (PS2)", false);
-        SmartDashboard.putData("Player Station", GO_DIRECTLY_CHOOSER);
-
+        GO_DIRECTLY_CHOOSER.addOption("no", false);
+        SmartDashboard.putData("Go Directly to Target Zone", GO_DIRECTLY_CHOOSER);
         
-        TARGET_BALL_POS_CHOOSER.addOption("Right (PS3)", RIGHT_AUTON_POS);
-        TARGET_BALL_POS_CHOOSER.addOption("Center (PS2)", CENTER_AUTON_POS);
-        TARGET_BALL_POS_CHOOSER.addOption("Left (PS1)", LEFT_AUTON_POS);
-        SmartDashboard.putData("Player Station", TARGET_BALL_POS_CHOOSER);
+        TARGET_BALL_POS_CHOOSER.addOption("Right Rendezvous", RIGHT_RENDEZVOUS);
+        TARGET_BALL_POS_CHOOSER.addOption("Left Rendezvous", LEFT_RENDEZVOUS);
+        TARGET_BALL_POS_CHOOSER.addOption("Trench", TRENCH);
+        TARGET_BALL_POS_CHOOSER.addOption("Loading Zone", LOADING_ZONE);
+        SmartDashboard.putData("Target Ball Position", TARGET_BALL_POS_CHOOSER);
 
         System.out.println("this is to test the drbug console and robotInit()");
 
@@ -253,7 +258,7 @@ public class Robot extends TimedRobot {
         System.out.println(resetEncoders());
         gyro.reset();
 
-        hang = new TwoStateMotor( 0.5, -0.1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
+        hang = new TwoStateMotor(0.5, -0.1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
     }
 
     public void initializeTalon(TalonSRX talon, NeutralMode neutralMode, boolean inverted) {
@@ -324,7 +329,7 @@ public class Robot extends TimedRobot {
      * and SmartDashboard integrated updating.
      */
     @Override
-    public void robotPeriodic() {        
+    public void robotPeriodic() {
         hang.tick();
 
         // System.out.println("rightMaster.GetSelectedSensorPosition(): " +
@@ -343,8 +348,8 @@ public class Robot extends TimedRobot {
      *
      * <p>
      * You can add additional auto modes by adding additional comparisons to the
-     * STARTING_POSITION structure below with additional strings. If using the SendableChooser
-     * make sure to add them to the chooser code above as well.
+     * STARTING_POSITION structure below with additional strings. If using the
+     * SendableChooser make sure to add them to the chooser code above as well.
      */
     @Override
     public void autonomousInit() {
@@ -356,28 +361,23 @@ public class Robot extends TimedRobot {
         System.out.println("target ball Pos selected: " + TargetBallPosSelected);
         resetEncoders();
         gyro.reset();
-        rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
+        rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
+                ROTATIONAL_GAIN_CONSTRAINTS);
         switch (startingPosSelected) {
         case RIGHT_AUTON_POS:
             // Put custom auto code here
             break;
         case CENTER_AUTON_POS:
-        autonInstructions.add(new MoveInch(10));
-        autonInstructions.add(new TurnDeg(-90));
-        autonInstructions.add(new MoveInch(56));
-        autonInstructions.add(new TurnDeg(-90));
-        autonInstructions.add(new MoveInch(10));
-        // put StartPush here
-        autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
-        autonInstructions.add(new WaitMs(3000));
-        autonInstructions.add(new MoveInch(-120));
-        
-
-
-
-
-
-
+            autonInstructions.add(new MoveInch(10));
+            autonInstructions.add(new TurnDeg(-90));
+            autonInstructions.add(new MoveInch(56));
+            autonInstructions.add(new TurnDeg(-90));
+            autonInstructions.add(new MoveInch(10));
+            autonInstructions.add(new StartPushing());
+            autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+            autonInstructions.add(new WaitMs(3000));
+            autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
+            autonInstructions.add(new MoveInch(-120));
             break;
         case LEFT_AUTON_POS:
             // Put custom auto code here
@@ -386,13 +386,27 @@ public class Robot extends TimedRobot {
             // Put default auto code here
             break;
         }
+        switch (targetPickupLocation) {
+        case RIGHT_RENDEZVOUS:
+             autonInstructions.add(new MoveInch(-314.625));
+             autonInstructions.add(new TurnDeg(-22.5));
+             autonInstructions.add(new MoveInch(10));
 
-        autonInstructions.add(new MoveInch(7));
-        autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
-        autonInstructions.add(new WaitMs(2000));
-        autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
-		autonInstructions.add(new TurnDeg(45));
-		autonInstructions.add(new MoveInch(-5));
+            // Put custom auto code here
+            break;
+        case LEFT_RENDEZVOUS:
+
+            break;
+        case TRENCH:
+            // Put custom auto code here
+            break;
+        case LOADING_ZONE:
+            // Put custom auto code here
+            break;
+        default:
+            // Put default auto code here
+            break;
+        }
 
     }
 
@@ -403,8 +417,8 @@ public class Robot extends TimedRobot {
     public void autonomousPeriodic() {
         System.out.println(targetPickupLocation);
         // while(!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)){
-		// 		autonInstructions.remove(0);
-		// }
+        // autonInstructions.remove(0);
+        // }
     }
 
     /**
@@ -431,16 +445,15 @@ public class Robot extends TimedRobot {
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         intakeOutButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
         intakeButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
-        hangButton = gHeroController.getName().isEmpty() ? false : 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
+        hangButton = gHeroController.getName().isEmpty() ? false
+                : 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
 
         popperOutButton = xboxController.getRawButton(R_SHOULDER);
-        
+
         setPistonExtended(DrawbridgeSol, drawbridgeButton);
-    
-        
+
         hang.set(hangButton);
         setPistonExtended(hangSol, hangButton);
-        
 
         if (arcadeButton) {
             ArcadeDrive = true;
@@ -540,8 +553,8 @@ public class Robot extends TimedRobot {
         }
         System.out.println(rightMaster.getSelectedSensorVelocity());
         if (Math.abs(gyro.getAngle() - degrees) < angleDeadband
-                && Math.abs(rightMaster.getSelectedSensorVelocity()) < 1024/4
-                && Math.abs(leftMaster.getSelectedSensorVelocity()) < 1024/4) {
+                && Math.abs(rightMaster.getSelectedSensorVelocity()) < 1024 / 4
+                && Math.abs(leftMaster.getSelectedSensorVelocity()) < 1024 / 4) {
             rightMaster.set(ControlMode.PercentOutput, 0);
             leftMaster.set(ControlMode.PercentOutput, 0);
             return true;
@@ -552,30 +565,29 @@ public class Robot extends TimedRobot {
         }
     }
 
-    void UpdateCompressor()
-	{
-		// if not enough pressure
-		if(!compressor.getPressureSwitchValue()) {
-			// Start compressor
-			compressor.start();
-		}
-		// if enough pressure
-		else {
-			// Stop compressor
-			compressor.stop();
-		}
+    void UpdateCompressor() {
+        // if not enough pressure
+        if (!compressor.getPressureSwitchValue()) {
+            // Start compressor
+            compressor.start();
+        }
+        // if enough pressure
+        else {
+            // Stop compressor
+            compressor.stop();
+        }
     } // END of UpdateCompressor() functionom
-    
-    public void setPistonExtended(SolenoidBase solenoid, boolean value){
-        if(solenoid instanceof Solenoid){
-            ((Solenoid)solenoid).set(value);
-        } else if(solenoid instanceof DoubleSolenoid){
-            if(value) {
-                ((DoubleSolenoid)solenoid).set(DoubleSolenoid.Value.kForward);
-            }else{
-                ((DoubleSolenoid)solenoid).set(DoubleSolenoid.Value.kReverse);
+
+    public void setPistonExtended(SolenoidBase solenoid, boolean value) {
+        if (solenoid instanceof Solenoid) {
+            ((Solenoid) solenoid).set(value);
+        } else if (solenoid instanceof DoubleSolenoid) {
+            if (value) {
+                ((DoubleSolenoid) solenoid).set(DoubleSolenoid.Value.kForward);
+            } else {
+                ((DoubleSolenoid) solenoid).set(DoubleSolenoid.Value.kReverse);
             }
 
         }
-	}
+    }
 }
