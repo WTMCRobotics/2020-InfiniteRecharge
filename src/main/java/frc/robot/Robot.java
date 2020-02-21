@@ -113,7 +113,7 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // the obect that is the navX-MXP
-    AHRS gyro = new AHRS(Port.kMXP);
+    public AHRS gyro = new AHRS(Port.kMXP);
     static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.0, 0.0, 0.0, 0, 0.0);
     static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
     static Gains rotationGains;
@@ -365,13 +365,13 @@ public class Robot extends TimedRobot {
                 ROTATIONAL_GAIN_CONSTRAINTS);
         switch (startingPosSelected) {
         case RIGHT_AUTON_POS:
-            // Put custom auto code here
             break;
         case CENTER_AUTON_POS:
             autonInstructions.add(new MoveInch(10));
             autonInstructions.add(new TurnDeg(-90));
             autonInstructions.add(new MoveInch(56));
             autonInstructions.add(new TurnDeg(-90));
+            autonInstructions.add(new WaitMs(5000));
             autonInstructions.add(new MoveInch(10));
             autonInstructions.add(new StartPushing());
             autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
@@ -390,7 +390,8 @@ public class Robot extends TimedRobot {
         case RIGHT_RENDEZVOUS:
              autonInstructions.add(new MoveInch(-314.625));
              autonInstructions.add(new TurnDeg(-22.5));
-             autonInstructions.add(new MoveInch(10));
+             autonInstructions.add(new MoveInch(60));
+             autonInstructions.add(new TurnDeg(-22.5));
 
             // Put custom auto code here
             break;
@@ -416,8 +417,9 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousPeriodic() {
         while(!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)){
+                System.out.println(autonInstructions.get(0));
 				autonInstructions.remove(0);
-		}
+        }
     }
 
     /**
