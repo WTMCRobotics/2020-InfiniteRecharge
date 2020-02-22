@@ -1,4 +1,4 @@
-package frc.robot.autonInstructions;
+package frc.robot.auton_instructions;
 
 import frc.robot.Robot;
 
@@ -12,8 +12,7 @@ public class TurnDeg extends Instruction {
 
 	@Override
 	public boolean doit(Robot robot) {
-
-		if(robot.turnDegs(degrees)){
+		if(robot.turnDegs(degrees) && robot.resetEncoders()){
 			robot.gyro.reset();
 			System.out.println("done");
 			return true;

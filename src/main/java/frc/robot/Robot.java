@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpiutil.math.MathUtil;
-import frc.robot.autonInstructions.*;
+import frc.robot.auton_instructions.*;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -114,7 +114,7 @@ public class Robot extends TimedRobot {
 
     // the obect that is the navX-MXP
     public AHRS gyro = new AHRS(Port.kMXP);
-    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.0, 0.0, 0.0, 0, 0.0);
+    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.001, 0.001, 0.0, 0, 0.0);
     static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
     static Gains rotationGains;
     static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(Double.POSITIVE_INFINITY,
@@ -217,7 +217,7 @@ public class Robot extends TimedRobot {
         GO_DIRECTLY_CHOOSER.addOption("yes", true);
         GO_DIRECTLY_CHOOSER.addOption("no", false);
         SmartDashboard.putData("Go Directly to Target Zone", GO_DIRECTLY_CHOOSER);
-        
+
         TARGET_BALL_POS_CHOOSER.addOption("Right Rendezvous", RIGHT_RENDEZVOUS);
         TARGET_BALL_POS_CHOOSER.addOption("Left Rendezvous", LEFT_RENDEZVOUS);
         TARGET_BALL_POS_CHOOSER.addOption("Trench", TRENCH);
@@ -255,7 +255,6 @@ public class Robot extends TimedRobot {
 
         rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
         leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
-        System.out.println(resetEncoders());
         gyro.reset();
 
         hang = new TwoStateMotor(0.5, -0.1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
@@ -353,6 +352,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousInit() {
+        autonInstructions.clear();
         startingPosSelected = STARTING_POS_CHOOSER.getSelected();
         System.out.println("starting Pos selected: " + startingPosSelected);
         goDirectlyPosSelected = GO_DIRECTLY_CHOOSER.getSelected();
@@ -363,50 +363,90 @@ public class Robot extends TimedRobot {
         gyro.reset();
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
                 ROTATIONAL_GAIN_CONSTRAINTS);
-        switch (startingPosSelected) {
-        case RIGHT_AUTON_POS:
-            break;
-        case CENTER_AUTON_POS:
-            autonInstructions.add(new MoveInch(10));
-            autonInstructions.add(new TurnDeg(-90));
-            autonInstructions.add(new MoveInch(56));
-            autonInstructions.add(new TurnDeg(-90));
-            autonInstructions.add(new WaitMs(5000));
-            autonInstructions.add(new MoveInch(10));
-            autonInstructions.add(new StartPushing());
-            autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
-            autonInstructions.add(new WaitMs(3000));
-            autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
-            autonInstructions.add(new MoveInch(-120));
-            break;
-        case LEFT_AUTON_POS:
-            // Put custom auto code here
-            break;
-        default:
-            // Put default auto code here
-            break;
-        }
-        switch (targetPickupLocation) {
-        case RIGHT_RENDEZVOUS:
-             autonInstructions.add(new MoveInch(-314.625));
-             autonInstructions.add(new TurnDeg(-22.5));
-             autonInstructions.add(new MoveInch(60));
-             autonInstructions.add(new TurnDeg(-22.5));
+        if (goDirectlyPosSelected) {
+            switch (startingPosSelected) {
+            case LEFT_AUTON_POS:
+                // Put custom auto code here
 
-            // Put custom auto code here
-            break;
-        case LEFT_RENDEZVOUS:
+                autonInstructions.add(new MoveInch(-34));
+                autonInstructions.add(new TurnDeg(-20));
+                autonInstructions.add(new MoveInch(31));
+                autonInstructions.add(new StartPushing());
+                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+                autonInstructions.add(new WaitMs(3000));
+                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
+                autonInstructions.add(new MoveInch(-120));
 
-            break;
-        case TRENCH:
-            // Put custom auto code here
-            break;
-        case LOADING_ZONE:
-            // Put custom auto code here
-            break;
-        default:
-            // Put default auto code here
-            break;
+                /*
+                 * autonInstructions.add(new MoveInch(10)); autonInstructions.add(new
+                 * TurnDeg(70)); autonInstructions.add(new MoveInch(14));
+                 * autonInstructions.add(new TurnDeg(90)); autonInstructions.add(new
+                 * MoveInch(8.5)); autonInstructions.add(new StartPushing());
+                 * autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+                 * autonInstructions.add(new WaitMs(3000)); autonInstructions.add(new
+                 * SetPistonExtended(DrawbridgeSol, false)); autonInstructions.add(new
+                 * MoveInch(-120)); break;
+                 */
+            case CENTER_AUTON_POS:
+                autonInstructions.add(new MoveInch(10));
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(56));
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(10));
+                autonInstructions.add(new StartPushing());
+                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+                autonInstructions.add(new WaitMs(3000));
+                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
+                autonInstructions.add(new MoveInch(-120));
+                break;
+            case RIGHT_AUTON_POS:
+                autonInstructions.add(new MoveInch(10));
+                autonInstructions.add(new TurnDeg(-70));
+                autonInstructions.add(new MoveInch(156));
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(8.5));
+                autonInstructions.add(new StartPushing());
+                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+                autonInstructions.add(new WaitMs(3000));
+                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
+                autonInstructions.add(new MoveInch(-120));
+
+                //put code for getting to right rendezvous from player station 3 here
+                /*
+                */
+                break;
+            default:
+                // Put default auto code here
+                break;
+            }
+            switch (targetPickupLocation) {
+            case RIGHT_RENDEZVOUS:
+                autonInstructions.add(new MoveInch(-314.625));
+                autonInstructions.add(new TurnDeg(-22.5));
+                autonInstructions.add(new MoveInch(60));
+                autonInstructions.add(new TurnDeg(-22.5));
+
+                // Put custom auto code here
+                break;
+            case LEFT_RENDEZVOUS:
+
+                break;
+            case TRENCH:
+            
+                // Put custom auto code here
+                break;
+            case LOADING_ZONE:
+                // Put custom auto code here
+                break;
+            default:
+                // Put default auto code here
+                break;
+            }
+        } else {
+            for (int i = 0; i < 12; i++) {
+                autonInstructions.add(new TurnDeg(90));
+                autonInstructions.add(new WaitMs(1000));
+            }
         }
 
     }
@@ -416,9 +456,8 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void autonomousPeriodic() {
-        while(!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)){
-                System.out.println(autonInstructions.get(0));
-				autonInstructions.remove(0);
+        while (!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)) {
+            autonInstructions.remove(0);
         }
     }
 
@@ -522,7 +561,8 @@ public class Robot extends TimedRobot {
         inches = -inches;
         rightMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
         leftMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
-        if (Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(deadband)) {
+        if (Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(deadband) && Math
+                .abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(deadband)) {
             return true;
         } else {
             return false;
@@ -552,7 +592,6 @@ public class Robot extends TimedRobot {
         } else if (output < 0) {
             output -= 0.10;
         }
-        System.out.println(rightMaster.getSelectedSensorVelocity());
         if (Math.abs(gyro.getAngle() - degrees) < angleDeadband
                 && Math.abs(rightMaster.getSelectedSensorVelocity()) < 1024 / 4
                 && Math.abs(leftMaster.getSelectedSensorVelocity()) < 1024 / 4) {

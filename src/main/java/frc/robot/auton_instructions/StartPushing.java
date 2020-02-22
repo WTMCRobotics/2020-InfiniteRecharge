@@ -1,4 +1,4 @@
-package frc.robot.autonInstructions;
+package frc.robot.auton_instructions;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 

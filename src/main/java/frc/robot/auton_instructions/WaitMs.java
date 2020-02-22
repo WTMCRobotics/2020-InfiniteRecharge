@@ -1,4 +1,4 @@
-package frc.robot.autonInstructions;
+package frc.robot.auton_instructions;
 
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.Robot;
