@@ -114,7 +114,7 @@ public class Robot extends TimedRobot {
 
     // the obect that is the navX-MXP
     public AHRS gyro = new AHRS(Port.kMXP);
-    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.001, 0.001, 0.0, 0, 0.0);
+    static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.003, 0.001, 0.0, 0, 0.0);
     static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
     static Gains rotationGains;
     static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(Double.POSITIVE_INFINITY,
@@ -122,10 +122,10 @@ public class Robot extends TimedRobot {
     ProfiledPIDController rotationPID;
 
     // The maximum distance from the destination considered close enough
-    private static final double deadband = 0.5;
+    private static final double distanceMarginOfError = 0.5;
 
     // The margin of error for angles when turning in auton
-    private static final double angleDeadband = 5;
+    private static final double angleMarginOfError = 5;
 
     boolean isPracticeRobot; // true if DIO9 is pulled low
     DigitalInput DIO9 = new DigitalInput(9); // this should be pulled low on the 2016 Practice Robot
@@ -174,6 +174,8 @@ public class Robot extends TimedRobot {
 
     static final int START = 7; // the mapping of the start button on a xbox controller
     static final int SELECT = 8; // the mapping of the select button on a xbox controller
+    static final int R_STICK = 10; // the mapping of the right shoulder on a xbox controller
+    static final int L_STICK = 9; // the mapping of the left shoulder on a xbox controller
     static final int R_SHOULDER = 6; // the mapping of the right shoulder on a xbox controller
     static final int L_SHOULDER = 5; // the mapping of the left shoulder on a xbox controller
 
@@ -446,6 +448,10 @@ public class Robot extends TimedRobot {
             for (int i = 0; i < 12; i++) {
                 autonInstructions.add(new TurnDeg(90));
                 autonInstructions.add(new WaitMs(1000));
+                autonInstructions.add(new TurnDeg(33));
+                autonInstructions.add(new WaitMs(1000));
+                autonInstructions.add(new TurnDeg(180));
+                autonInstructions.add(new WaitMs(1000));
             }
         }
 
@@ -480,8 +486,8 @@ public class Robot extends TimedRobot {
         rightjoyY = xboxController.getY(GenericHID.Hand.kRight);
         leftjoyX = xboxController.getX(GenericHID.Hand.kLeft);
         rightjoyX = xboxController.getX(GenericHID.Hand.kRight);
-        arcadeButton = xboxController.getRawButton(START);
-        tankButton = xboxController.getRawButton(SELECT);
+        arcadeButton = xboxController.getRawButton(L_STICK);
+        tankButton = xboxController.getRawButton(R_STICK);
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
         intakeOutButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
         intakeButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
@@ -559,10 +565,12 @@ public class Robot extends TimedRobot {
     // move an amount in s straight line
     public boolean moveInches(double inches) {
         inches = -inches;
-        rightMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
         leftMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
-        if (Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(deadband) && Math
-                .abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(deadband)) {
+        rightMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
+        if (Math.abs(leftMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(distanceMarginOfError) &&
+            Math.abs(leftMaster.getActiveTrajectoryVelocity()) < inchesToTicks(1)*10 &&
+            Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(distanceMarginOfError) &&
+            Math.abs(rightMaster.getActiveTrajectoryVelocity()) < inchesToTicks(1)*10 ) {
             return true;
         } else {
             return false;
@@ -592,7 +600,7 @@ public class Robot extends TimedRobot {
         } else if (output < 0) {
             output -= 0.10;
         }
-        if (Math.abs(gyro.getAngle() - degrees) < angleDeadband
+        if (Math.abs(gyro.getAngle() - degrees) < angleMarginOfError
                 && Math.abs(rightMaster.getSelectedSensorVelocity()) < 1024 / 4
                 && Math.abs(leftMaster.getSelectedSensorVelocity()) < 1024 / 4) {
             rightMaster.set(ControlMode.PercentOutput, 0);
