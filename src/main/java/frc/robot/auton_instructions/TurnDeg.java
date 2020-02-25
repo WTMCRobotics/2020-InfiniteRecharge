@@ -17,7 +17,6 @@ public class TurnDeg extends Instruction {
 			System.out.println("done");
 			return true;
 		}
-		System.out.println();
 		return false;
 	}
 

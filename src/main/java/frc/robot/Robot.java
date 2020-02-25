@@ -118,7 +118,7 @@ public class Robot extends TimedRobot {
     static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
     static Gains rotationGains;
     static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(Double.POSITIVE_INFINITY,
-            Double.POSITIVE_INFINITY); // m/s and m/s/s
+            20); // m/s and m/s/s
     ProfiledPIDController rotationPID;
 
     // The maximum distance from the destination considered close enough
@@ -447,11 +447,11 @@ public class Robot extends TimedRobot {
         } else {
             for (int i = 0; i < 12; i++) {
                 autonInstructions.add(new TurnDeg(90));
-                autonInstructions.add(new WaitMs(1000));
+                autonInstructions.add(new WaitMs(10000));
                 autonInstructions.add(new TurnDeg(33));
-                autonInstructions.add(new WaitMs(1000));
+                autonInstructions.add(new WaitMs(10000));
                 autonInstructions.add(new TurnDeg(180));
-                autonInstructions.add(new WaitMs(1000));
+                autonInstructions.add(new WaitMs(10000));
             }
         }
 
