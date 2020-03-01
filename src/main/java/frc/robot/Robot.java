@@ -76,8 +76,20 @@ public class Robot extends TimedRobot {
 
     ArrayList<Instruction> autonInstructions = new ArrayList<Instruction>();
 
-    DigitalInput DIO8 = new DigitalInput(8); // this should be pulled low on the 2016 Practice Robot
-    DigitalInput DIO7 = new DigitalInput(7); // this should be pulled low on the 2016 Practice Robot
+    // ##########################################
+    // Digital IO related constants
+    // ##########################################
+
+    // DIO IDs
+    static final int ROBOT_SENSOR_ID = 9; // sensor for when the winch is extended
+    static final int HANG_SET_SENSOR_ID = 0; // sensor for when the winch is extended
+    static final int HANG_DEFAULT_SENSOR_ID = 1; // sensor for when the winch is retracted
+
+    //Binary Sensors
+    static final DigitalInput ROBOT_SENSOR = new DigitalInput(9); // this should be pulled low on the 2016 Practice Robot
+    static final DigitalInput HANG_SET_SENSOR = new DigitalInput(HANG_SET_SENSOR_ID); // sensor for when the winch is extended
+    static final DigitalInput HANG_DEFAULT_SENSOR = new DigitalInput(HANG_DEFAULT_SENSOR_ID); // sensor for when the winch is retracted
+
 
     // ##########################################
     // talon related constants and variables
@@ -127,8 +139,7 @@ public class Robot extends TimedRobot {
     // The margin of error for angles when turning in auton
     private static final double angleMarginOfError = 5;
 
-    boolean isPracticeRobot; // true if DIO9 is pulled low
-    DigitalInput DIO9 = new DigitalInput(9); // this should be pulled low on the 2016 Practice Robot
+    boolean isPracticeRobot; // true if ROBOT_SENSOR is pulled low
     double circumference; // this value will be updated with the circumference of the drive wheels
 
     boolean ArcadeDrive = true; // variable stores weather to use Arcade or tank style controls
@@ -154,16 +165,8 @@ public class Robot extends TimedRobot {
     // Drawbridge and hang related constants and variables
     // ##########################################
 
-    // DIO
-    static final int HANG_SET_SENSOR_ID = 0; // sensor for when the winch is extended
-    static final int HANG_DEFAULT_SENSOR_ID = 1; // sensor for when the winch is retracted
-
-    //DIO
-    static final DigitalInput HANG_SET_SENSOR = new DigitalInput(HANG_SET_SENSOR_ID); // sensor for when the winch is extended
-    static final DigitalInput HANG_DEFAULT_SENSOR = new DigitalInput(HANG_DEFAULT_SENSOR_ID); // sensor for when the winch is retracted
-
     // declares objects for the TwoStateMotor class
-    TwoStateMotor hang;
+    TwoStateMotor hang = new TwoStateMotor(0.5, -0.1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);;
 
     // ##########################################
     // Controller related constants and variables
@@ -232,7 +235,7 @@ public class Robot extends TimedRobot {
 
         System.out.println("this is to test the drbug console and robotInit()");
 
-        isPracticeRobot = !DIO9.get();
+        isPracticeRobot = !ROBOT_SENSOR.get();
         if (isPracticeRobot) {
             circumference = 6 * Math.PI;
             gains = PRACTICE_ROBOT_GAINS;
@@ -262,8 +265,6 @@ public class Robot extends TimedRobot {
         rightSlave.set(ControlMode.Follower, RIGHT_MASTER_ID);
         leftSlave.set(ControlMode.Follower, LEFT_MASTER_ID);
         gyro.reset();
-
-        hang = new TwoStateMotor(0.5, -0.1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);
     }
 
     public void initializeTalon(TalonSRX talon, NeutralMode neutralMode, boolean inverted) {
