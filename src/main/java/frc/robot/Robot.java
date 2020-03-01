@@ -81,15 +81,18 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // DIO IDs
-    static final int ROBOT_SENSOR_ID = 9; // sensor for when the winch is extended
+    static final int ROBOT_SENSOR_ID = 9; // this should be pulled low on the 2016 Practice Robot
     static final int HANG_SET_SENSOR_ID = 0; // sensor for when the winch is extended
     static final int HANG_DEFAULT_SENSOR_ID = 1; // sensor for when the winch is retracted
+    static final int INTAKE_SENSOR_ID = 2; // sensor for when a ball is waitung to be popped up
+    static final int INTAKE_COUNTER_SENSOR_ID = 3; // sensor for counting balls
 
     //Binary Sensors
     static final DigitalInput ROBOT_SENSOR = new DigitalInput(9); // this should be pulled low on the 2016 Practice Robot
     static final DigitalInput HANG_SET_SENSOR = new DigitalInput(HANG_SET_SENSOR_ID); // sensor for when the winch is extended
     static final DigitalInput HANG_DEFAULT_SENSOR = new DigitalInput(HANG_DEFAULT_SENSOR_ID); // sensor for when the winch is retracted
-
+    static final DigitalInput INTAKE_SENSOR = new DigitalInput(INTAKE_SENSOR_ID); // sensor for when a ball is waitung to be popped up
+    static final DigitalInput INTAKE_COUNTER_SENSOR = new DigitalInput(INTAKE_COUNTER_SENSOR_ID); // sensor for counting balls
 
     // ##########################################
     // talon related constants and variables
