@@ -155,8 +155,12 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // DIO
-    static final int HANG_SET_SENSOR = 0; // sensor for when the winch is extended
-    static final int HANG_DEFAULT_SENSOR = 1; // sensor for when the winch is retracted
+    static final int HANG_SET_SENSOR_ID = 0; // sensor for when the winch is extended
+    static final int HANG_DEFAULT_SENSOR_ID = 1; // sensor for when the winch is retracted
+
+    //DIO
+    static final DigitalInput HANG_SET_SENSOR = new DigitalInput(HANG_SET_SENSOR_ID); // sensor for when the winch is extended
+    static final DigitalInput HANG_DEFAULT_SENSOR = new DigitalInput(HANG_DEFAULT_SENSOR_ID); // sensor for when the winch is retracted
 
     // declares objects for the TwoStateMotor class
     TwoStateMotor hang;

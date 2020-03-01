@@ -28,15 +28,15 @@ class TwoStateMotor {
     boolean isSet; // the state of the set Sensor
     int direction; // the target direction 1 for set and -1 for normal
 
-    TwoStateMotor(double speed, TalonSRX motor, int defaultSensor, int setSensor) {
+    TwoStateMotor(double speed, TalonSRX motor, DigitalInput defaultSensor, DigitalInput setSensor) {
         this.speed = speed;
         this.motor = motor;
-        this.defaultSensor = new DigitalInput(defaultSensor);
-        this.setSensor = new DigitalInput(setSensor);
+        this.defaultSensor = defaultSensor;
+        this.setSensor = setSensor;
         this.motor.setNeutralMode(NeutralMode.Brake);
     }
 
-    TwoStateMotor(double speed, double speedOffset, TalonSRX motor, int defaultSensor, int setSensor) {
+    TwoStateMotor(double speed, double speedOffset, TalonSRX motor, DigitalInput defaultSensor, DigitalInput setSensor) {
         this(speed, motor, defaultSensor, setSensor);
         this.speedOffset = speedOffset;
     }
