@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SolenoidBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -92,7 +93,7 @@ public class Robot extends TimedRobot {
     static final DigitalInput HANG_SET_SENSOR = new DigitalInput(HANG_SET_SENSOR_ID); // sensor for when the winch is extended
     static final DigitalInput HANG_DEFAULT_SENSOR = new DigitalInput(HANG_DEFAULT_SENSOR_ID); // sensor for when the winch is retracted
     static final DigitalInput INTAKE_SENSOR = new DigitalInput(INTAKE_SENSOR_ID); // sensor for when a ball is waitung to be popped up
-    static final DigitalInput INTAKE_COUNTER_SENSOR = new DigitalInput(INTAKE_COUNTER_SENSOR_ID); // sensor for counting balls
+    static final DigitalInput POPPER_SENSOR = new DigitalInput(INTAKE_COUNTER_SENSOR_ID); // sensor for counting balls
 
     // ##########################################
     // talon related constants and variables
@@ -164,6 +165,19 @@ public class Robot extends TimedRobot {
     static final double POPPER_SPEED_IN = 0.2;
     static final double POPPER_SPEED_OUT = -0.2;
 
+    // the Amount of time popper motor should go for in robot cycles.
+    static final int POPPER_TIME_IN = 20;
+    static final int POPPER_TIME_OUT = 10;
+
+    // the amount of time in robot cycles that this will move
+    int popperInTime = 0;
+    int popperOutTime = 0;
+
+    int popperCounterTime; // the number of cycles that the counter sensor has bean interuped for
+    static final int POPPER_COUNTER_COUNT_TIME = 5; // the number of cycles that a ball interupes the sensor for when passing
+    static final int POPPER_COUNTER_JAM_TIME = 5; // the number of cycles that contitutes a popper jam
+    int ballsStored = 0; // the number of balls in the robot
+
     // ##########################################
     // Drawbridge and hang related constants and variables
     // ##########################################
@@ -194,9 +208,10 @@ public class Robot extends TimedRobot {
     boolean tankButton; // true if the button that selects tank mode is pressed
     boolean drawbridgeButton; // true if the button that lowers the drawbridge is pressed
     boolean hangButton; // true if the button that extends the hang mecanism is pressed
-    boolean intakeButton; // true if the button that intakes is pressed
+    boolean intakeInButton; // true if the button that intakes is pressed
     boolean intakeOutButton; // true if the button that runs the intake in reverse is pressed
-    boolean popperOutButton; // true if the button that reverses the popper is pressed.
+    boolean popperInButton; // true if the button that runs the popper is pressed
+    boolean popperOutButton; // true if the button that reverses the popper is pressed
 
     // ##########################################
     // Pneumatics related constants and variables
@@ -212,7 +227,7 @@ public class Robot extends TimedRobot {
 
     Compressor compressor = new Compressor(1);
 
-    DoubleSolenoid DrawbridgeSol = new DoubleSolenoid(1, PCM_DRAWBRIDGE_IN, PCM_DRAWBRIDGE_OUT);
+    DoubleSolenoid drawbridgeSol = new DoubleSolenoid(1, PCM_DRAWBRIDGE_IN, PCM_DRAWBRIDGE_OUT);
     Solenoid hangSol = new Solenoid(1, PCM_RATCHET);
 
     /**
@@ -382,9 +397,9 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new TurnDeg(-20));
                 autonInstructions.add(new MoveInch(31));
                 autonInstructions.add(new StartPushing());
-                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
                 autonInstructions.add(new WaitMs(3000));
-                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
                 autonInstructions.add(new MoveInch(-120));
 
                 /*
@@ -392,9 +407,9 @@ public class Robot extends TimedRobot {
                  * TurnDeg(70)); autonInstructions.add(new MoveInch(14));
                  * autonInstructions.add(new TurnDeg(90)); autonInstructions.add(new
                  * MoveInch(8.5)); autonInstructions.add(new StartPushing());
-                 * autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+                 * autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
                  * autonInstructions.add(new WaitMs(3000)); autonInstructions.add(new
-                 * SetPistonExtended(DrawbridgeSol, false)); autonInstructions.add(new
+                 * SetPistonExtended(drawbridgeSol, false)); autonInstructions.add(new
                  * MoveInch(-120)); break;
                  */
             case CENTER_AUTON_POS:
@@ -404,9 +419,9 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new TurnDeg(-90));
                 autonInstructions.add(new MoveInch(10));
                 autonInstructions.add(new StartPushing());
-                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
                 autonInstructions.add(new WaitMs(3000));
-                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
                 autonInstructions.add(new MoveInch(-120));
                 break;
             case RIGHT_AUTON_POS:
@@ -416,9 +431,9 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new TurnDeg(-90));
                 autonInstructions.add(new MoveInch(8.5));
                 autonInstructions.add(new StartPushing());
-                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, true));
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
                 autonInstructions.add(new WaitMs(3000));
-                autonInstructions.add(new SetPistonExtended(DrawbridgeSol, false));
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
                 autonInstructions.add(new MoveInch(-120));
 
                 //put code for getting to right rendezvous from player station 3 here
@@ -473,6 +488,12 @@ public class Robot extends TimedRobot {
         while (!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)) {
             autonInstructions.remove(0);
         }
+        handelPopper(true);
+        if(ballsStored < 5){
+            intake.set(ControlMode.PercentOutput, INTAKE_SPEED_IN);
+        } else {
+            intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
+        }
     }
 
     /**
@@ -497,14 +518,14 @@ public class Robot extends TimedRobot {
         arcadeButton = xboxController.getRawButton(L_STICK);
         tankButton = xboxController.getRawButton(R_STICK);
         drawbridgeButton = 1 == gHeroController.getX(GenericHID.Hand.kRight);
+        intakeInButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
         intakeOutButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kRight);
-        intakeButton = 0.1 < xboxController.getTriggerAxis(GenericHID.Hand.kLeft);
+        popperInButton = xboxController.getRawButton(L_SHOULDER);
+        popperOutButton = xboxController.getRawButton(R_SHOULDER);
         hangButton = gHeroController.getName().isEmpty() ? false
                 : 0.5 > gHeroController.getTriggerAxis(GenericHID.Hand.kLeft);
 
-        popperOutButton = xboxController.getRawButton(R_SHOULDER);
-
-        setPistonExtended(DrawbridgeSol, drawbridgeButton);
+        setPistonExtended(drawbridgeSol, drawbridgeButton);
 
         hang.set(hangButton);
         setPistonExtended(hangSol, hangButton);
@@ -532,18 +553,20 @@ public class Robot extends TimedRobot {
         }
 
         // this code handles intake
-        if (intakeButton) {
+        if (intakeInButton && ballsStored < 5) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_IN);
+        } else if (intakeOutButton || ballsStored >= 5) {
+            intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
+        }
+        //this code handles the popper
+        if (popperInButton) {
             popper.set(ControlMode.PercentOutput, POPPER_SPEED_IN);
+            handelPopper(false);
         } else if (popperOutButton) {
-            intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
             popper.set(ControlMode.PercentOutput, POPPER_SPEED_OUT);
-        } else if (intakeOutButton) {
-            intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
-            popper.set(ControlMode.PercentOutput, 0);
+            handelPopper(false);
         } else {
-            intake.set(ControlMode.PercentOutput, 0);
-            popper.set(ControlMode.PercentOutput, 0);
+            handelPopper(true);
         }
 
     }
@@ -644,6 +667,40 @@ public class Robot extends TimedRobot {
                 ((DoubleSolenoid) solenoid).set(DoubleSolenoid.Value.kReverse);
             }
 
+        }
+    }
+
+    //this code is called from auton and teleop periodic and uses sensors to automaticly handel the popper
+    void handelPopper(boolean shoudSetPopper) {
+        //if a ball is ready to be popped
+        if(INTAKE_SENSOR.get()){
+            popperInTime = POPPER_TIME_IN;
+        }
+
+        //if there is a ball at the top of the popper
+        if(POPPER_SENSOR.get()){
+            popperCounterTime++;
+        } else {
+            //here popperCounterTime will be equal to the duration of the interuption that ended on the prevous robot cycle
+            if(popperCounterTime > POPPER_COUNTER_JAM_TIME){
+                System.out.println("popper jammed");
+                popperInTime = POPPER_TIME_IN;
+                popperOutTime = POPPER_TIME_OUT;
+            } else if(popperCounterTime > POPPER_COUNTER_COUNT_TIME) {
+                System.out.println("ball counted");
+                ballsStored++;
+            }
+            popperCounterTime = 0;
+        }
+
+        if(popperOutTime-- > 0 && shoudSetPopper){
+            popper.set(ControlMode.PercentOutput, POPPER_SPEED_OUT);
+        } else if(popperInTime-- > 0 && shoudSetPopper && ballsStored < 5){
+            popper.set(ControlMode.PercentOutput, POPPER_SPEED_IN);
+        }
+
+        if(drawbridgeSol.get() == Value.kForward){
+            ballsStored = 0;
         }
     }
 }
