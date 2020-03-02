@@ -88,11 +88,15 @@ public class Robot extends TimedRobot {
     static final int INTAKE_SENSOR_ID = 2; // sensor for when a ball is waitung to be popped up
     static final int INTAKE_COUNTER_SENSOR_ID = 3; // sensor for counting balls
 
-    //Binary Sensors
-    static final DigitalInput ROBOT_SENSOR = new DigitalInput(9); // this should be pulled low on the 2016 Practice Robot
-    static final DigitalInput HANG_SET_SENSOR = new DigitalInput(HANG_SET_SENSOR_ID); // sensor for when the winch is extended
-    static final DigitalInput HANG_DEFAULT_SENSOR = new DigitalInput(HANG_DEFAULT_SENSOR_ID); // sensor for when the winch is retracted
-    static final DigitalInput INTAKE_SENSOR = new DigitalInput(INTAKE_SENSOR_ID); // sensor for when a ball is waitung to be popped up
+    // Binary Sensors
+    static final DigitalInput ROBOT_SENSOR = new DigitalInput(9); // this should be pulled low on the 2016 Practice
+                                                                  // Robot
+    static final DigitalInput HANG_SET_SENSOR = new DigitalInput(HANG_SET_SENSOR_ID); // sensor for when the winch is
+                                                                                      // extended
+    static final DigitalInput HANG_DEFAULT_SENSOR = new DigitalInput(HANG_DEFAULT_SENSOR_ID); // sensor for when the
+                                                                                              // winch is retracted
+    static final DigitalInput INTAKE_SENSOR = new DigitalInput(INTAKE_SENSOR_ID); // sensor for when a ball is waitung
+                                                                                  // to be popped up
     static final DigitalInput POPPER_SENSOR = new DigitalInput(INTAKE_COUNTER_SENSOR_ID); // sensor for counting balls
 
     // ##########################################
@@ -133,8 +137,8 @@ public class Robot extends TimedRobot {
     static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.003, 0.001, 0.0, 0, 0.0);
     static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
     static Gains rotationGains;
-    static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(Double.POSITIVE_INFINITY,
-            20); // m/s and m/s/s
+    static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(Double.POSITIVE_INFINITY, 20); // m/s and
+                                                                                                          // m/s/s
     ProfiledPIDController rotationPID;
 
     // The maximum distance from the destination considered close enough
@@ -174,7 +178,8 @@ public class Robot extends TimedRobot {
     int popperOutTime = 0;
 
     int popperCounterTime; // the number of cycles that the counter sensor has bean interuped for
-    static final int POPPER_COUNTER_COUNT_TIME = 5; // the number of cycles that a ball interupes the sensor for when passing
+    static final int POPPER_COUNTER_COUNT_TIME = 5; // the number of cycles that a ball interupes the sensor for when
+                                                    // passing
     static final int POPPER_COUNTER_JAM_TIME = 50; // the number of cycles that contitutes a popper jam
     int ballsStored = 0; // the number of balls in the robot
 
@@ -436,7 +441,7 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
                 autonInstructions.add(new MoveInch(-120));
 
-                //put code for getting to right rendezvous from player station 3 here
+                // put code for getting to right rendezvous from player station 3 here
                 /*
                 */
                 break;
@@ -457,7 +462,7 @@ public class Robot extends TimedRobot {
 
                 break;
             case TRENCH:
-            
+
                 // Put custom auto code here
                 break;
             case LOADING_ZONE:
@@ -489,7 +494,7 @@ public class Robot extends TimedRobot {
             autonInstructions.remove(0);
         }
         handelPopper(true);
-        if(ballsStored < 5){
+        if (ballsStored < 5) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_IN);
         } else {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
@@ -558,7 +563,7 @@ public class Robot extends TimedRobot {
         } else if (intakeOutButton || ballsStored >= 5) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
         }
-        //this code handles the popper
+        // this code handles the popper
         if (popperInButton) {
             popper.set(ControlMode.PercentOutput, POPPER_SPEED_IN);
             handelPopper(false);
@@ -598,10 +603,12 @@ public class Robot extends TimedRobot {
         inches = -inches;
         leftMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
         rightMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
-        if (Math.abs(leftMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(distanceMarginOfError) &&
-            Math.abs(leftMaster.getActiveTrajectoryVelocity()) < inchesToTicks(1)*10 &&
-            Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(distanceMarginOfError) &&
-            Math.abs(rightMaster.getActiveTrajectoryVelocity()) < inchesToTicks(1)*10 ) {
+        if (Math.abs(leftMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(
+                distanceMarginOfError)
+                && Math.abs(leftMaster.getActiveTrajectoryVelocity()) < inchesToTicks(1) * 10
+                && Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(
+                        distanceMarginOfError)
+                && Math.abs(rightMaster.getActiveTrajectoryVelocity()) < inchesToTicks(1) * 10) {
             return true;
         } else {
             return false;
@@ -670,36 +677,39 @@ public class Robot extends TimedRobot {
         }
     }
 
-    //this code is called from auton and teleop periodic and uses sensors to automaticly handel the popper
+    // this code is called from auton and teleop periodic and uses sensors to
+    // automaticly handel the popper
     void handelPopper(boolean shoudSetPopper) {
-        //if a ball is ready to be popped
-        if(INTAKE_SENSOR.get()){
+        // if a ball is ready to be popped
+        if (INTAKE_SENSOR.get()) {
             popperInTime = POPPER_TIME_IN;
         }
 
-        //if there is a ball at the top of the popper
-        if(POPPER_SENSOR.get()){
-            popperCounterTime++;
-        } else {
-            //here popperCounterTime will be equal to the duration of the interuption that ended on the prevous robot cycle
-            if(popperCounterTime > POPPER_COUNTER_JAM_TIME){
+        // if there is a ball at the top of the popper
+        if (POPPER_SENSOR.get()) {
+            if (++popperCounterTime > POPPER_COUNTER_JAM_TIME) {
                 System.out.println("popper jammed");
                 popperInTime = POPPER_TIME_IN;
                 popperOutTime = POPPER_TIME_OUT;
-            } else if(popperCounterTime > POPPER_COUNTER_COUNT_TIME) {
+            }
+        } else {
+            if (popperCounterTime > POPPER_COUNTER_JAM_TIME) {
+                System.out.println("popper unjammed");
+            } else if (popperCounterTime > POPPER_COUNTER_COUNT_TIME) {
                 System.out.println("ball counted");
                 ballsStored++;
+                System.out.println("ballsStored: "+ballsStored);
             }
             popperCounterTime = 0;
         }
 
-        if(popperOutTime-- > 0 && shoudSetPopper){
+        if (popperOutTime-- > 0 && shoudSetPopper) {
             popper.set(ControlMode.PercentOutput, POPPER_SPEED_OUT);
-        } else if(popperInTime-- > 0 && shoudSetPopper && ballsStored < 5){
+        } else if (popperInTime-- > 0 && shoudSetPopper && ballsStored < 5) {
             popper.set(ControlMode.PercentOutput, POPPER_SPEED_IN);
         }
 
-        if(drawbridgeSol.get() == Value.kForward){
+        if (drawbridgeSol.get() == Value.kForward) {
             ballsStored = 0;
         }
     }
