@@ -166,8 +166,8 @@ public class Robot extends TimedRobot {
     static final double POPPER_SPEED_OUT = -0.2;
 
     // the Amount of time popper motor should go for in robot cycles.
-    static final int POPPER_TIME_IN = 20;
-    static final int POPPER_TIME_OUT = 10;
+    static final int POPPER_TIME_IN = 50;
+    static final int POPPER_TIME_OUT = 20;
 
     // the amount of time in robot cycles that this will move
     int popperInTime = 0;
@@ -175,7 +175,7 @@ public class Robot extends TimedRobot {
 
     int popperCounterTime; // the number of cycles that the counter sensor has bean interuped for
     static final int POPPER_COUNTER_COUNT_TIME = 5; // the number of cycles that a ball interupes the sensor for when passing
-    static final int POPPER_COUNTER_JAM_TIME = 5; // the number of cycles that contitutes a popper jam
+    static final int POPPER_COUNTER_JAM_TIME = 50; // the number of cycles that contitutes a popper jam
     int ballsStored = 0; // the number of balls in the robot
 
     // ##########################################
