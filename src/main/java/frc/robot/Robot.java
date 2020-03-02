@@ -405,7 +405,7 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
                 autonInstructions.add(new WaitMs(3000));
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
-                autonInstructions.add(new MoveInch(-120));
+                autonInstructions.add(new MoveInch(-126));
 
                 /*
                  * autonInstructions.add(new MoveInch(10)); autonInstructions.add(new
@@ -427,7 +427,7 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
                 autonInstructions.add(new WaitMs(3000));
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
-                autonInstructions.add(new MoveInch(-120));
+                autonInstructions.add(new MoveInch(-126));
                 break;
             case RIGHT_AUTON_POS:
                 autonInstructions.add(new MoveInch(10));
@@ -439,7 +439,7 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
                 autonInstructions.add(new WaitMs(3000));
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
-                autonInstructions.add(new MoveInch(-120));
+                autonInstructions.add(new MoveInch(-126));
 
                 // put code for getting to right rendezvous from player station 3 here
                 /*
@@ -451,22 +451,58 @@ public class Robot extends TimedRobot {
             }
             switch (targetPickupLocation) {
             case RIGHT_RENDEZVOUS:
-                autonInstructions.add(new MoveInch(-314.625));
+                autonInstructions.add(new MoveInch(-308.625));
                 autonInstructions.add(new TurnDeg(-22.5));
                 autonInstructions.add(new MoveInch(60));
-                autonInstructions.add(new TurnDeg(-22.5));
+                //picking up 2 balls here
+                autonInstructions.add(new MoveInch(-60));
+                autonInstructions.add(new TurnDeg(22.5));
+                autonInstructions.add(new MoveInch(308.625));
+                autonInstructions.add(new MoveInch(126));
 
-                // Put custom auto code here
+
+                //could put alternate code here making robot pick up other 3 balls
                 break;
             case LEFT_RENDEZVOUS:
-
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(y));
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(270));
+                autonInstructions.add(new TurnDeg(22.5));
+                autonInstructions.add(new MoveInch(60));
+                //picking up 3 balls here
+                autonInstructions.add(new MoveInch(-60));
+                autonInstructions.add(new TurnDeg(-22.5));
+                autonInstructions.add(new MoveInch(-270));
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(y));
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(126));
+                //could put alternate code here making robot pick up other 2 balls
                 break;
             case TRENCH:
-
-                // Put custom auto code here
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(51.75));
+                autonInstructions.add(new TurnDeg(90));
+                autonInstructions.add(new MoveInch(x));
+                //picking up 3 balls here
+                autonInstructions.add(new MoveInch(-x));
+                autonInstructions.add(new TurnDeg(90));
+                autonInstructions.add(new MoveInch(51.75));
+                autonInstructions.add(new TurnDeg(90));
+                autonInstructions.add(new MoveInch(126));
+                
                 break;
             case LOADING_ZONE:
-                // Put custom auto code here
+            //dont use this one
+            autonInstructions.add(new TurnDeg(180));
+            autonInstructions.add(new MoveInch(629.25));
+            autonInstructions.add(new StartPushing());
+            autonInstructions.add(new WaitMs(3000));
+            autonInstructions.add(new MoveInch(-629.25));
+            autonInstructions.add(new TurnDeg(180));
+            autonInstructions.add(new MoveInch(126));
+
                 break;
             default:
                 // Put default auto code here
