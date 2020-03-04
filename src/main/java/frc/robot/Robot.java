@@ -414,7 +414,7 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new WaitMs(3000));
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
                 autonInstructions.add(new MoveInch(-120));
-                autonInstructions.add(new TurnDeg(180);
+                autonInstructions.add(new TurnDeg(180));
 
 
                 
@@ -450,7 +450,7 @@ public class Robot extends TimedRobot {
             autonInstructions.add(new WaitMs(3000));
             autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
             autonInstructions.add(new MoveInch(-120));
-            autonInstructions.add(new TurnDeg(180);
+            autonInstructions.add(new TurnDeg(180));
             
             
             
@@ -481,7 +481,7 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new WaitMs(3000));
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
                 autonInstructions.add(new MoveInch(-120));
-                autonInstructions.add(new TurnDeg(180);
+                autonInstructions.add(new TurnDeg(180));
 
             /*
                 autonInstructions.add(new MoveInch(10));
@@ -671,11 +671,7 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
-        // if (moveInches(-12)) {
-        // System.out.println("done");
-        // }
-        // System.out.println(gyro.getAngle() +" "+
-        // rotationPID.calculate(gyro.getAngle(), 45));
+        setPistonExtended(drawbridgeSol, true);
     }
 
     public void testInit() {
