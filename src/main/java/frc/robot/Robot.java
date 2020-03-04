@@ -48,9 +48,9 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // auton modes
-    private static final int RIGHT_AUTON_POS = 3;
-    private static final int CENTER_AUTON_POS = 2;
-    private static final int LEFT_AUTON_POS = 1;
+    private static final int LEFT_AUTON_POS = 3;
+    private static final int TARGET_ZONE_AUTON_POS = 2;
+    private static final int TRENCH_AUTON_POS = 1;
 
     private static final int RIGHT_RENDEZVOUS = 1;
     private static final int LEFT_RENDEZVOUS = 2;
@@ -89,7 +89,7 @@ public class Robot extends TimedRobot {
     static final int INTAKE_COUNTER_SENSOR_ID = 3; // sensor for counting balls
 
     // Binary Sensors
-    static final DigitalInput ROBOT_SENSOR = new DigitalInput(9); // this should be pulled low on the 2016 Practice
+    static final DigitalInput ROBOT_SENSOR = new DigitalInput(ROBOT_SENSOR_ID); // this should be pulled low on the 2016 Practice
                                                                   // Robot
     static final DigitalInput HANG_SET_SENSOR = new DigitalInput(HANG_SET_SENSOR_ID); // sensor for when the winch is
                                                                                       // extended
@@ -162,12 +162,12 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // the speed of the intake motor. Accepts values between 1 and -1.
-    static final double INTAKE_SPEED_IN = 0.2;
-    static final double INTAKE_SPEED_OUT = -0.2;
+    static final double INTAKE_SPEED_IN = 0.3;
+    static final double INTAKE_SPEED_OUT = -0.25;
 
     // the speed of the popper motor. Accepts values between 1 and -1.
-    static final double POPPER_SPEED_IN = 0.2;
-    static final double POPPER_SPEED_OUT = -0.2;
+    static final double POPPER_SPEED_IN = 0.8;
+    static final double POPPER_SPEED_OUT = -0.4;
 
     // the Amount of time popper motor should go for in robot cycles.
     static final int POPPER_TIME_IN = 50;
@@ -241,9 +241,9 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotInit() {
-        STARTING_POS_CHOOSER.addOption("Right (PS3)", RIGHT_AUTON_POS);
-        STARTING_POS_CHOOSER.addOption("Center (PS2)", CENTER_AUTON_POS);
-        STARTING_POS_CHOOSER.addOption("Left (PS1)", LEFT_AUTON_POS);
+        STARTING_POS_CHOOSER.addOption("Left (PS2)", LEFT_AUTON_POS);
+        STARTING_POS_CHOOSER.addOption("Target Zone", TARGET_ZONE_AUTON_POS);
+        STARTING_POS_CHOOSER.addOption("Trench", TRENCH_AUTON_POS);
         SmartDashboard.putData("Player Station", STARTING_POS_CHOOSER);
 
         GO_DIRECTLY_CHOOSER.addOption("yes", true);
@@ -279,8 +279,8 @@ public class Robot extends TimedRobot {
         initializeTalon(rightMaster, NeutralMode.Brake, true);
         initializeTalon(rightSlave, NeutralMode.Brake, true);
         initializeTalon(hangMotor, NeutralMode.Brake, false);
-        initializeTalon(intake, NeutralMode.Brake, false);
-        initializeTalon(popper, NeutralMode.Brake, false);
+        initializeTalon(intake, NeutralMode.Coast, false);
+        initializeTalon(popper, NeutralMode.Coast, false);
 
         initializeMotionMagicMaster(rightMaster);
         initializeMotionMagicMaster(leftMaster);
@@ -395,9 +395,31 @@ public class Robot extends TimedRobot {
                 ROTATIONAL_GAIN_CONSTRAINTS);
         if (goDirectlyPosSelected) {
             switch (startingPosSelected) {
-            case LEFT_AUTON_POS:
+            case TRENCH_AUTON_POS:
                 // Put custom auto code here
 
+                
+
+
+                //start with front bumper on the initiation line facing our trench and start loaded with only two balls
+                autonInstructions.add(new MoveInch(133));
+                autonInstructions.add(new MoveInch(-133));
+                autonInstructions.add(new TurnDeg(90));
+                //67.875 inches might be the wrong distance from the middle of the trench run (the one closest to the target zone) to the middle of the target zone
+                autonInstructions.add(new MoveInch(67.875));
+                autonInstructions.add(new TurnDeg(90));
+                autonInstructions.add(new MoveInch(120));
+                autonInstructions.add(new StartPushing());
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
+                autonInstructions.add(new WaitMs(3000));
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
+                autonInstructions.add(new MoveInch(-120));
+                autonInstructions.add(new TurnDeg(180);
+
+
+                
+
+            /*
                 autonInstructions.add(new MoveInch(-34));
                 autonInstructions.add(new TurnDeg(-20));
                 autonInstructions.add(new MoveInch(31));
@@ -405,7 +427,8 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
                 autonInstructions.add(new WaitMs(3000));
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
-                autonInstructions.add(new MoveInch(-126));
+                autonInstructions.add(new MoveInch(-120));
+            
 
                 /*
                  * autonInstructions.add(new MoveInch(10)); autonInstructions.add(new
@@ -417,7 +440,21 @@ public class Robot extends TimedRobot {
                  * SetPistonExtended(drawbridgeSol, false)); autonInstructions.add(new
                  * MoveInch(-120)); break;
                  */
-            case CENTER_AUTON_POS:
+            case TARGET_ZONE_AUTON_POS:
+               
+            //start with back bumper on initiation line facing torwards the middle of the target zone
+            autonInstructions.add(new MoveInch(-38));
+            autonInstructions.add(new MoveInch(120));
+            autonInstructions.add(new StartPushing());
+            autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
+            autonInstructions.add(new WaitMs(3000));
+            autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
+            autonInstructions.add(new MoveInch(-120));
+            autonInstructions.add(new TurnDeg(180);
+            
+            
+            
+            /*
                 autonInstructions.add(new MoveInch(10));
                 autonInstructions.add(new TurnDeg(-90));
                 autonInstructions.add(new MoveInch(56));
@@ -429,7 +466,24 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
                 autonInstructions.add(new MoveInch(-126));
                 break;
-            case RIGHT_AUTON_POS:
+            */
+
+            case LEFT_AUTON_POS:
+
+                //start with back bumper on initiation line, middle of robot lined up with side of PS2 furthest from target zone facing away from end of arena closest to it
+                autonInstructions.add(new MoveInch(10));
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(108));
+                autonInstructions.add(new TurnDeg(-90));
+                autonInstructions.add(new MoveInch(130));
+                autonInstructions.add(new StartPushing());
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
+                autonInstructions.add(new WaitMs(3000));
+                autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
+                autonInstructions.add(new MoveInch(-120));
+                autonInstructions.add(new TurnDeg(180);
+
+            /*
                 autonInstructions.add(new MoveInch(10));
                 autonInstructions.add(new TurnDeg(-70));
                 autonInstructions.add(new MoveInch(156));
@@ -464,10 +518,10 @@ public class Robot extends TimedRobot {
                 //could put alternate code here making robot pick up other 3 balls
                 break;
             case LEFT_RENDEZVOUS:
+                autonInstructions.add(new TurnDeg(90));
+                //autonInstructions.add(new MoveInch(y));
                 autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(y));
-                autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(270));
+                autonInstructions.add(new MoveInch(276));
                 autonInstructions.add(new TurnDeg(22.5));
                 autonInstructions.add(new MoveInch(60));
                 //picking up 3 balls here
@@ -475,18 +529,18 @@ public class Robot extends TimedRobot {
                 autonInstructions.add(new TurnDeg(-22.5));
                 autonInstructions.add(new MoveInch(-270));
                 autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(y));
+                //autonInstructions.add(new MoveInch(y));
                 autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(126));
+                autonInstructions.add(new MoveInch(120));
                 //could put alternate code here making robot pick up other 2 balls
                 break;
             case TRENCH:
                 autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(51.75));
+                autonInstructions.add(new MoveInch(67.875));
                 autonInstructions.add(new TurnDeg(90));
-                autonInstructions.add(new MoveInch(x));
+                autonInstructions.add(new MoveInch(114));
                 //picking up 3 balls here
-                autonInstructions.add(new MoveInch(-x));
+                autonInstructions.add(new MoveInch(-114));
                 autonInstructions.add(new TurnDeg(90));
                 autonInstructions.add(new MoveInch(51.75));
                 autonInstructions.add(new TurnDeg(90));
@@ -717,12 +771,12 @@ public class Robot extends TimedRobot {
     // automaticly handel the popper
     void handelPopper(boolean shoudSetPopper) {
         // if a ball is ready to be popped
-        if (INTAKE_SENSOR.get()) {
+        if (!INTAKE_SENSOR.get()) {
             popperInTime = POPPER_TIME_IN;
         }
 
         // if there is a ball at the top of the popper
-        if (POPPER_SENSOR.get()) {
+        if (!POPPER_SENSOR.get()) {
             if (++popperCounterTime > POPPER_COUNTER_JAM_TIME) {
                 System.out.println("popper jammed");
                 popperInTime = POPPER_TIME_IN;
@@ -739,10 +793,14 @@ public class Robot extends TimedRobot {
             popperCounterTime = 0;
         }
 
-        if (popperOutTime-- > 0 && shoudSetPopper) {
-            popper.set(ControlMode.PercentOutput, POPPER_SPEED_OUT);
-        } else if (popperInTime-- > 0 && shoudSetPopper && ballsStored < 5) {
-            popper.set(ControlMode.PercentOutput, POPPER_SPEED_IN);
+        if(shoudSetPopper){
+            if (popperOutTime-- > 0) {
+                popper.set(ControlMode.PercentOutput, POPPER_SPEED_OUT);
+            } else if (popperInTime-- > 0 && ballsStored < 5) {
+                popper.set(ControlMode.PercentOutput, POPPER_SPEED_IN);
+            } else {
+                popper.set(ControlMode.PercentOutput, 0);
+            }
         }
 
         if (drawbridgeSol.get() == Value.kForward) {
