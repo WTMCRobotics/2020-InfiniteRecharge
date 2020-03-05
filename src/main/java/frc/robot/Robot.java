@@ -244,7 +244,7 @@ public class Robot extends TimedRobot {
         STARTING_POS_CHOOSER.addOption("Left (PS2)", LEFT_AUTON_POS);
         STARTING_POS_CHOOSER.addOption("Target Zone", TARGET_ZONE_AUTON_POS);
         STARTING_POS_CHOOSER.addOption("Trench", TRENCH_AUTON_POS);
-        SmartDashboard.putData("Player Station", STARTING_POS_CHOOSER);
+        SmartDashboard.putData("Starting Position", STARTING_POS_CHOOSER);
 
         GO_DIRECTLY_CHOOSER.addOption("yes", true);
         GO_DIRECTLY_CHOOSER.addOption("no", false);
