@@ -394,183 +394,96 @@ public class Robot extends TimedRobot {
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
                 ROTATIONAL_GAIN_CONSTRAINTS);
         if (goDirectlyPosSelected) {
-            switch (startingPosSelected) {
-            case TRENCH_AUTON_POS:
-                // Put custom auto code here
-
-                
-
-
-                //start with front bumper on the initiation line facing our trench and start loaded with only two balls
-                autonInstructions.add(new MoveInch(133));
-                autonInstructions.add(new MoveInch(-133));
-                autonInstructions.add(new TurnDeg(90));
-                //67.875 inches might be the wrong distance from the middle of the trench run (the one closest to the target zone) to the middle of the target zone
-                autonInstructions.add(new MoveInch(67.875));
-                autonInstructions.add(new TurnDeg(90));
-                autonInstructions.add(new MoveInch(120));
+            if(startingPosSelected > 0){
+                switch (startingPosSelected) {
+                case TRENCH_AUTON_POS://start with front bumper on the initiation line facing our trench and start loaded with only two balls
+                    autonInstructions.add(new MoveInch(133));
+                    autonInstructions.add(new MoveInch(-133));
+                    autonInstructions.add(new TurnDeg(90));
+                    autonInstructions.add(new MoveInch(67.875));//67.875 inches might be the wrong distance from the middle of the trench run (the one closest to the target zone) to the middle of the target zone
+                    autonInstructions.add(new TurnDeg(90));
+                    autonInstructions.add(new MoveInch(120));
+                case TARGET_ZONE_AUTON_POS:
+                    //start with back bumper on initiation line facing torwards the middle of the target zone
+                    autonInstructions.add(new MoveInch(-38));
+                    autonInstructions.add(new MoveInch(120));
+                case LEFT_AUTON_POS:
+                    //start with back bumper on initiation line, middle of robot lined up with side of PS2 furthest from target zone facing away from end of arena closest to it
+                    autonInstructions.add(new MoveInch(10));
+                    autonInstructions.add(new TurnDeg(-90));
+                    autonInstructions.add(new MoveInch(108));
+                    autonInstructions.add(new TurnDeg(-90));
+                    autonInstructions.add(new MoveInch(130));
+                    break;
+                default:
+                    // this case shouldnt happen because of the if statment above
+                    break;
+                }
                 autonInstructions.add(new StartPushing());
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
                 autonInstructions.add(new WaitMs(3000));
                 autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
                 autonInstructions.add(new MoveInch(-120));
-                autonInstructions.add(new TurnDeg(180));
-
-
-                
-
-            /*
-                autonInstructions.add(new MoveInch(-34));
-                autonInstructions.add(new TurnDeg(-20));
-                autonInstructions.add(new MoveInch(31));
-                autonInstructions.add(new StartPushing());
-                autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
-                autonInstructions.add(new WaitMs(3000));
-                autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
-                autonInstructions.add(new MoveInch(-120));
-            
-
-                /*
-                 * autonInstructions.add(new MoveInch(10)); autonInstructions.add(new
-                 * TurnDeg(70)); autonInstructions.add(new MoveInch(14));
-                 * autonInstructions.add(new TurnDeg(90)); autonInstructions.add(new
-                 * MoveInch(8.5)); autonInstructions.add(new StartPushing());
-                 * autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
-                 * autonInstructions.add(new WaitMs(3000)); autonInstructions.add(new
-                 * SetPistonExtended(drawbridgeSol, false)); autonInstructions.add(new
-                 * MoveInch(-120)); break;
-                 */
-            case TARGET_ZONE_AUTON_POS:
-               
-            //start with back bumper on initiation line facing torwards the middle of the target zone
-            autonInstructions.add(new MoveInch(-38));
-            autonInstructions.add(new MoveInch(120));
-            autonInstructions.add(new StartPushing());
-            autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
-            autonInstructions.add(new WaitMs(3000));
-            autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
-            autonInstructions.add(new MoveInch(-120));
-            autonInstructions.add(new TurnDeg(180));
-            
-            
-            
-            /*
-                autonInstructions.add(new MoveInch(10));
-                autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(56));
-                autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(10));
-                autonInstructions.add(new StartPushing());
-                autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
-                autonInstructions.add(new WaitMs(3000));
-                autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
-                autonInstructions.add(new MoveInch(-126));
-                break;
-            */
-
-            case LEFT_AUTON_POS:
-
-                //start with back bumper on initiation line, middle of robot lined up with side of PS2 furthest from target zone facing away from end of arena closest to it
-                autonInstructions.add(new MoveInch(10));
-                autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(108));
-                autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(130));
-                autonInstructions.add(new StartPushing());
-                autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
-                autonInstructions.add(new WaitMs(3000));
-                autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
-                autonInstructions.add(new MoveInch(-120));
-                autonInstructions.add(new TurnDeg(180));
-
-            /*
-                autonInstructions.add(new MoveInch(10));
-                autonInstructions.add(new TurnDeg(-70));
-                autonInstructions.add(new MoveInch(156));
-                autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(8.5));
-                autonInstructions.add(new StartPushing());
-                autonInstructions.add(new SetPistonExtended(drawbridgeSol, true));
-                autonInstructions.add(new WaitMs(3000));
-                autonInstructions.add(new SetPistonExtended(drawbridgeSol, false));
-                autonInstructions.add(new MoveInch(-126));
-
-                // put code for getting to right rendezvous from player station 3 here
-                /*
-                */
-                break;
-            default:
-                // Put default auto code here
-                break;
-            }
-            switch (targetPickupLocation) {
-            case RIGHT_RENDEZVOUS:
-                autonInstructions.add(new MoveInch(-308.625));
-                autonInstructions.add(new TurnDeg(-22.5));
-                autonInstructions.add(new MoveInch(60));
-                //picking up 2 balls here
-                autonInstructions.add(new MoveInch(-60));
-                autonInstructions.add(new TurnDeg(22.5));
-                autonInstructions.add(new MoveInch(308.625));
-                autonInstructions.add(new MoveInch(126));
-
-
-                //could put alternate code here making robot pick up other 3 balls
-                break;
-            case LEFT_RENDEZVOUS:
-                autonInstructions.add(new TurnDeg(90));
-                //autonInstructions.add(new MoveInch(y));
-                autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(276));
-                autonInstructions.add(new TurnDeg(22.5));
-                autonInstructions.add(new MoveInch(60));
-                //picking up 3 balls here
-                autonInstructions.add(new MoveInch(-60));
-                autonInstructions.add(new TurnDeg(-22.5));
-                autonInstructions.add(new MoveInch(-270));
-                autonInstructions.add(new TurnDeg(-90));
-                //autonInstructions.add(new MoveInch(y));
-                autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(120));
-                //could put alternate code here making robot pick up other 2 balls
-                break;
-            case TRENCH:
-                autonInstructions.add(new TurnDeg(-90));
-                autonInstructions.add(new MoveInch(67.875));
-                autonInstructions.add(new TurnDeg(90));
-                autonInstructions.add(new MoveInch(114));
-                //picking up 3 balls here
-                autonInstructions.add(new MoveInch(-114));
-                autonInstructions.add(new TurnDeg(90));
-                autonInstructions.add(new MoveInch(51.75));
-                autonInstructions.add(new TurnDeg(90));
-                autonInstructions.add(new MoveInch(126));
-                
-                break;
-            case LOADING_ZONE:
-            //dont use this one
-            autonInstructions.add(new TurnDeg(180));
-            autonInstructions.add(new MoveInch(629.25));
-            autonInstructions.add(new StartPushing());
-            autonInstructions.add(new WaitMs(3000));
-            autonInstructions.add(new MoveInch(-629.25));
-            autonInstructions.add(new TurnDeg(180));
-            autonInstructions.add(new MoveInch(126));
-
-                break;
-            default:
-                // Put default auto code here
-                break;
+                switch (targetPickupLocation) {
+                case RIGHT_RENDEZVOUS:
+                    autonInstructions.add(new MoveInch(-308.625));
+                    autonInstructions.add(new TurnDeg(-22.5));
+                    autonInstructions.add(new MoveInch(60));
+                    //picking up 2 balls here
+                    autonInstructions.add(new MoveInch(-60));
+                    autonInstructions.add(new TurnDeg(22.5));
+                    autonInstructions.add(new MoveInch(308.625));
+                    autonInstructions.add(new MoveInch(126));
+                    //could put alternate code here making robot pick up other 3 balls
+                    break;
+                case LEFT_RENDEZVOUS:
+                    autonInstructions.add(new TurnDeg(90));
+                    //autonInstructions.add(new MoveInch(y));
+                    autonInstructions.add(new TurnDeg(-90));
+                    autonInstructions.add(new MoveInch(276));
+                    autonInstructions.add(new TurnDeg(22.5));
+                    autonInstructions.add(new MoveInch(60));
+                    //picking up 3 balls here
+                    autonInstructions.add(new MoveInch(-60));
+                    autonInstructions.add(new TurnDeg(-22.5));
+                    autonInstructions.add(new MoveInch(-270));
+                    autonInstructions.add(new TurnDeg(-90));
+                    //autonInstructions.add(new MoveInch(y));
+                    autonInstructions.add(new TurnDeg(-90));
+                    autonInstructions.add(new MoveInch(120));
+                    //could put alternate code here making robot pick up other 2 balls
+                    break;
+                case TRENCH:
+                    autonInstructions.add(new TurnDeg(-90));
+                    autonInstructions.add(new MoveInch(67.875));
+                    autonInstructions.add(new TurnDeg(90));
+                    autonInstructions.add(new MoveInch(114));
+                    //picking up 3 balls here
+                    autonInstructions.add(new MoveInch(-114));
+                    autonInstructions.add(new TurnDeg(90));
+                    autonInstructions.add(new MoveInch(51.75));
+                    autonInstructions.add(new TurnDeg(90));
+                    autonInstructions.add(new MoveInch(126));                
+                    break;
+                case LOADING_ZONE:
+                    //dont use this one
+                    autonInstructions.add(new TurnDeg(180));
+                    autonInstructions.add(new MoveInch(629.25));
+                    autonInstructions.add(new StartPushing());
+                    autonInstructions.add(new WaitMs(3000));
+                    autonInstructions.add(new MoveInch(-629.25));
+                    autonInstructions.add(new TurnDeg(180));
+                    autonInstructions.add(new MoveInch(126));
+                    break;
+                default:
+                    // TODO make fallback
+                    break;
+                }
+            } else {
+                // TODO make fallback
             }
         } else {
-            for (int i = 0; i < 12; i++) {
-                autonInstructions.add(new TurnDeg(90));
-                autonInstructions.add(new WaitMs(10000));
-                autonInstructions.add(new TurnDeg(33));
-                autonInstructions.add(new WaitMs(10000));
-                autonInstructions.add(new TurnDeg(180));
-                autonInstructions.add(new WaitMs(10000));
-            }
+            //TODO
         }
 
     }
