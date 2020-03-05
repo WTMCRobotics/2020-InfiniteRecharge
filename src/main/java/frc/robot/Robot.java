@@ -271,8 +271,7 @@ public class Robot extends TimedRobot {
             System.out.println("using 8 inch weels");
         }
 
-        rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
-                ROTATIONAL_GAIN_CONSTRAINTS);
+        rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
 
         initializeTalon(leftMaster, NeutralMode.Brake, false);
         initializeTalon(leftSlave, NeutralMode.Brake, false);
@@ -391,12 +390,12 @@ public class Robot extends TimedRobot {
         System.out.println("target ball Pos selected: " + TargetBallPosSelected);
         resetEncoders();
         gyro.reset();
-        rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D,
-                ROTATIONAL_GAIN_CONSTRAINTS);
+        rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
         if (goDirectlyPosSelected) {
-            if(startingPosSelected > 0){
+            if(startingPosSelected > 0){ //this checks that the staring position has bean set
                 switch (startingPosSelected) {
-                case TRENCH_AUTON_POS://start with front bumper on the initiation line facing our trench and start loaded with only two balls
+                case TRENCH_AUTON_POS:
+                    //start with front bumper on the initiation line facing our trench and start loaded with only two balls
                     autonInstructions.add(new MoveInch(133));
                     autonInstructions.add(new MoveInch(-133));
                     autonInstructions.add(new TurnDeg(90));
@@ -485,7 +484,6 @@ public class Robot extends TimedRobot {
         } else {
             //TODO
         }
-
     }
 
     /**
@@ -556,16 +554,15 @@ public class Robot extends TimedRobot {
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
 
-        if (xboxController.getXButton()) {
-            resetEncoders();
-        }
-
         // this code handles intake
         if (intakeInButton && ballsStored < 5) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_IN);
         } else if (intakeOutButton || ballsStored >= 5) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
+        } else {
+            intake.set(ControlMode.PercentOutput, 0);
         }
+
         // this code handles the popper
         if (popperInButton) {
             popper.set(ControlMode.PercentOutput, POPPER_SPEED_IN);
