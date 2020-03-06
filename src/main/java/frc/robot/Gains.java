@@ -4,9 +4,9 @@
 package frc.robot;
 
 public class Gains {
-	public final double P;
-	public final double I;
-	public final double D;
+	public double P;
+	public double I;
+	public double D;
 	public final double F;
 	public final int IZONE;
 	public final double PEAK_OUTPUT;

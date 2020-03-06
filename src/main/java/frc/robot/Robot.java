@@ -162,25 +162,25 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // the speed of the intake motor. Accepts values between 1 and -1.
-    static final double INTAKE_SPEED_IN = 0.3;
+    static final double INTAKE_SPEED_IN = 0.25;
     static final double INTAKE_SPEED_OUT = -0.25;
 
     // the speed of the popper motor. Accepts values between 1 and -1.
     static final double POPPER_SPEED_IN = 0.8;
-    static final double POPPER_SPEED_OUT = -0.4;
+    static final double POPPER_SPEED_OUT = -0.2;
 
     // the Amount of time popper motor should go for in robot cycles.
-    static final int POPPER_TIME_IN = 50;
-    static final int POPPER_TIME_OUT = 20;
+    static final int POPPER_TIME_IN = 35;
+    static final int POPPER_TIME_OUT = 10;
 
     // the amount of time in robot cycles that this will move
     int popperInTime = 0;
     int popperOutTime = 0;
 
     int popperCounterTime; // the number of cycles that the counter sensor has bean interuped for
-    static final int POPPER_COUNTER_COUNT_TIME = 5; // the number of cycles that a ball interupes the sensor for when
-                                                    // passing
-    static final int POPPER_COUNTER_JAM_TIME = 50; // the number of cycles that contitutes a popper jam
+    static final int INTAKE_COUNTER_COUNT_TIME = 3; // the number of cycles that a ball interupes the sensor for when passing                                                    
+    int intakeTime; // the number of cycles that the counter sensor has bean interuped for
+    static final int POPPER_COUNTER_JAM_TIME = 20; // the number of cycles that contitutes a popper jam
     int ballsStored = 0; // the number of balls in the robot
 
     // ##########################################
@@ -244,6 +244,7 @@ public class Robot extends TimedRobot {
         STARTING_POS_CHOOSER.addOption("Left (PS2)", LEFT_AUTON_POS);
         STARTING_POS_CHOOSER.addOption("Target Zone", TARGET_ZONE_AUTON_POS);
         STARTING_POS_CHOOSER.addOption("Trench", TRENCH_AUTON_POS);
+        
         SmartDashboard.putData("Starting Position", STARTING_POS_CHOOSER);
 
         GO_DIRECTLY_CHOOSER.addOption("yes", true);
@@ -270,6 +271,11 @@ public class Robot extends TimedRobot {
             rotationGains = COMPETITION_ROTATION_GAINS;
             System.out.println("using 8 inch weels");
         }
+
+        SmartDashboard.putNumber("Balls Stored", ballsStored);
+        SmartDashboard.putNumber("Power", gains.P);
+        SmartDashboard.putNumber("Integral", gains.I);
+        SmartDashboard.putNumber("Derivative", gains.D);
 
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
 
@@ -494,7 +500,7 @@ public class Robot extends TimedRobot {
         while (!autonInstructions.isEmpty() && autonInstructions.get(0).doit(this)) {
             autonInstructions.remove(0);
         }
-        handelPopper(true);
+        handlePopper(true);
         if (ballsStored < 5) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_IN);
         } else {
@@ -566,12 +572,12 @@ public class Robot extends TimedRobot {
         // this code handles the popper
         if (popperInButton) {
             popper.set(ControlMode.PercentOutput, POPPER_SPEED_IN);
-            handelPopper(false);
+            handlePopper(false);
         } else if (popperOutButton) {
             popper.set(ControlMode.PercentOutput, POPPER_SPEED_OUT);
-            handelPopper(false);
+            handlePopper(false);
         } else {
-            handelPopper(true);
+            handlePopper(true);
         }
 
     }
@@ -585,6 +591,9 @@ public class Robot extends TimedRobot {
     }
 
     public void testInit() {
+        gains.P = SmartDashboard.getNumber("Power", gains.P);
+        gains.I = SmartDashboard.getNumber("Integral", gains.I);
+        gains.D = SmartDashboard.getNumber("Derivative", gains.D);
     }
 
     // sets encoder position to zero
@@ -675,10 +684,20 @@ public class Robot extends TimedRobot {
 
     // this code is called from auton and teleop periodic and uses sensors to
     // automaticly handel the popper
-    void handelPopper(boolean shoudSetPopper) {
+    void handlePopper(boolean shoudSetPopper) {
         // if a ball is ready to be popped
         if (!INTAKE_SENSOR.get()) {
             popperInTime = POPPER_TIME_IN;
+            intakeTime++;
+        } else {
+            if (intakeTime > INTAKE_COUNTER_COUNT_TIME) {
+                System.out.println("ball incoming");
+                SmartDashboard.putNumber("Balls Stored", ++ballsStored);
+                System.out.println("ballsStored: "+ballsStored);
+            } else if(intakeTime > 0) {
+                System.out.println("intakeTime: "+intakeTime);
+            }
+            intakeTime = 0;
         }
 
         // if there is a ball at the top of the popper
@@ -689,20 +708,14 @@ public class Robot extends TimedRobot {
                 popperOutTime = POPPER_TIME_OUT;
             }
         } else {
-            if (popperCounterTime > POPPER_COUNTER_JAM_TIME) {
-                System.out.println("popper unjammed");
-            } else if (popperCounterTime > POPPER_COUNTER_COUNT_TIME) {
-                System.out.println("ball counted");
-                ballsStored++;
-                System.out.println("ballsStored: "+ballsStored);
-            }
             popperCounterTime = 0;
         }
 
         if(shoudSetPopper){
             if (popperOutTime-- > 0) {
                 popper.set(ControlMode.PercentOutput, POPPER_SPEED_OUT);
-            } else if (popperInTime-- > 0 && ballsStored < 5) {
+            } else if (popperInTime-- > 0
+            ) {
                 popper.set(ControlMode.PercentOutput, POPPER_SPEED_IN);
             } else {
                 popper.set(ControlMode.PercentOutput, 0);
@@ -711,6 +724,7 @@ public class Robot extends TimedRobot {
 
         if (drawbridgeSol.get() == Value.kForward) {
             ballsStored = 0;
+            System.out.println("ballsStored: "+ballsStored);
         }
     }
 }
