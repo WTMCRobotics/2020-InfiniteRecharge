@@ -20,12 +20,14 @@ import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.SolenoidBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.controller.ProfiledPIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -272,11 +274,6 @@ public class Robot extends TimedRobot {
             System.out.println("using 8 inch weels");
         }
 
-        SmartDashboard.putNumber("Balls Stored", ballsStored);
-        SmartDashboard.putNumber("Power", gains.P);
-        SmartDashboard.putNumber("Integral", gains.I);
-        SmartDashboard.putNumber("Derivative", gains.D);
-
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
 
         initializeTalon(leftMaster, NeutralMode.Brake, false);
@@ -365,12 +362,30 @@ public class Robot extends TimedRobot {
     @Override
     public void robotPeriodic() {
         hang.tick();
+        
+        SmartDashboard.putNumber("Balls Stored", ballsStored);
+    }
 
-        // System.out.println("rightMaster.GetSelectedSensorPosition(): " +
-        // rightMaster.getSelectedSensorPosition());
-        // System.out.println("leftMaster.GetSelectedSensorPosition(): " +
-        // leftMaster.getSelectedSensorPosition());
+    @Override
+    public void disabledInit() {
+    }
 
+    @Override
+    public void disabledPeriodic() {
+        try{
+            startingPosSelected = STARTING_POS_CHOOSER.getSelected();
+            System.out.println("starting Pos selected: " + startingPosSelected);
+            goDirectlyPosSelected = GO_DIRECTLY_CHOOSER.getSelected();
+            System.out.println("go directly selected: " + goDirectlyPosSelected);
+            TargetBallPosSelected = TARGET_BALL_POS_CHOOSER.getSelected();
+            System.out.println("target ball Pos selected: " + TargetBallPosSelected);
+
+            //this line will run only if the other lines didn't crash
+            SmartDashboard.putBoolean("Ready", true);
+        } catch(NullPointerException e){
+            DriverStation.reportError("auton path not configured!", true);
+            SmartDashboard.putBoolean("Ready", false);
+        }
     }
 
     /**
@@ -388,12 +403,6 @@ public class Robot extends TimedRobot {
     @Override
     public void autonomousInit() {
         autonInstructions.clear();
-        startingPosSelected = STARTING_POS_CHOOSER.getSelected();
-        System.out.println("starting Pos selected: " + startingPosSelected);
-        goDirectlyPosSelected = GO_DIRECTLY_CHOOSER.getSelected();
-        System.out.println("go directly selected: " + goDirectlyPosSelected);
-        TargetBallPosSelected = TARGET_BALL_POS_CHOOSER.getSelected();
-        System.out.println("target ball Pos selected: " + TargetBallPosSelected);
         resetEncoders();
         gyro.reset();
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
@@ -560,8 +569,16 @@ public class Robot extends TimedRobot {
             rightMaster.set(ControlMode.PercentOutput, rightjoyY);
         }
 
+        if (intakeInButton && ballsStored >= 5) {
+            xboxController.setRumble(RumbleType.kLeftRumble, 1.0);
+            xboxController.setRumble(RumbleType.kRightRumble, 1.0);
+        } else {
+            xboxController.setRumble(RumbleType.kLeftRumble, 0.0);
+            xboxController.setRumble(RumbleType.kRightRumble, 0.0);
+        }
+
         // this code handles intake
-        if (intakeInButton && ballsStored < 5) {
+        if (intakeInButton) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_IN);
         } else if (intakeOutButton || ballsStored >= 5) {
             intake.set(ControlMode.PercentOutput, INTAKE_SPEED_OUT);
@@ -587,13 +604,21 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
-        setPistonExtended(drawbridgeSol, true);
     }
 
     public void testInit() {
-        gains.P = SmartDashboard.getNumber("Power", gains.P);
+        SmartDashboard.putNumber("Proportion", gains.P);
+        SmartDashboard.putNumber("Integral", gains.I);
+        SmartDashboard.putNumber("Derivative", gains.D);
+        gains.P = SmartDashboard.getNumber("Proportion", gains.P);
         gains.I = SmartDashboard.getNumber("Integral", gains.I);
         gains.D = SmartDashboard.getNumber("Derivative", gains.D);
+        SmartDashboard.putNumber("rotationProportion", rotationGains.P);
+        SmartDashboard.putNumber("rotationIntegral", rotationGains.I);
+        SmartDashboard.putNumber("rotationDerivative", rotationGains.D);
+        rotationGains.P = SmartDashboard.getNumber("rotationProportion", rotationGains.P);
+        rotationGains.I = SmartDashboard.getNumber("rotationIntegral", rotationGains.I);
+        rotationGains.D = SmartDashboard.getNumber("rotationDerivative", rotationGains.D);
     }
 
     // sets encoder position to zero
@@ -692,7 +717,7 @@ public class Robot extends TimedRobot {
         } else {
             if (intakeTime > INTAKE_COUNTER_COUNT_TIME) {
                 System.out.println("ball incoming");
-                SmartDashboard.putNumber("Balls Stored", ++ballsStored);
+                ballsStored++;
                 System.out.println("ballsStored: "+ballsStored);
             } else if(intakeTime > 0) {
                 System.out.println("intakeTime: "+intakeTime);
