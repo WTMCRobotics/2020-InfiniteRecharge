@@ -190,7 +190,7 @@ public class Robot extends TimedRobot {
     // ##########################################
 
     // declares objects for the TwoStateMotor class
-    TwoStateMotor hang = new TwoStateMotor(0.5, -0.1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);;
+    TwoStateMotor hang = new RatchetMotor(0.5, -0.1, hangMotor, HANG_DEFAULT_SENSOR, HANG_SET_SENSOR);;
 
     // ##########################################
     // Controller related constants and variables
