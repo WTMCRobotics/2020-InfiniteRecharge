@@ -137,7 +137,7 @@ public class Robot extends TimedRobot {
     // the obect that is the navX-MXP
     public AHRS gyro = new AHRS(Port.kMXP);
     static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.003, 0.001, 0.0, 0, 0.0);
-    static final Gains COMPETITION_ROTATION_GAINS = new Gains(2.0, 0.0, 0.0, 0.0, 0, 0.0);
+    static final Gains COMPETITION_ROTATION_GAINS = new Gains(0.04, 0.003, 0.001, 0.0, 0, 0.0);
     static Gains rotationGains;
     static final Constraints ROTATIONAL_GAIN_CONSTRAINTS = new Constraints(Double.POSITIVE_INFINITY, 20); // m/s and
                                                                                                           // m/s/s
@@ -155,7 +155,7 @@ public class Robot extends TimedRobot {
     boolean ArcadeDrive = true; // variable stores weather to use Arcade or tank style controls
 
     static final Gains PRACTICE_ROBOT_GAINS = new Gains(0.2, 0.00035, 1.5, 0.2, 0, 1.0);
-    static final Gains COMPETITION_ROBOT_GAINS = new Gains(2.0, 0.0, 0.0, 0.2, 0, 1.0);
+    static final Gains COMPETITION_ROBOT_GAINS = new Gains(0.075, 0.0, 0.0, 0.2, 0, 1.0);
     static Gains gains; // used for drivetran motion magic when moving and is ste to
                         // PRACTICE_ROBOT_GAINS or COMPETITION_ROBOT_GAINS
 
@@ -374,11 +374,11 @@ public class Robot extends TimedRobot {
     public void disabledPeriodic() {
         try{
             startingPosSelected = STARTING_POS_CHOOSER.getSelected();
-            System.out.println("starting Pos selected: " + startingPosSelected);
+            //System.out.println("starting Pos selected: " + startingPosSelected);
             goDirectlyPosSelected = GO_DIRECTLY_CHOOSER.getSelected();
-            System.out.println("go directly selected: " + goDirectlyPosSelected);
+            //System.out.println("go directly selected: " + goDirectlyPosSelected);
             TargetBallPosSelected = TARGET_BALL_POS_CHOOSER.getSelected();
-            System.out.println("target ball Pos selected: " + TargetBallPosSelected);
+            //System.out.println("target ball Pos selected: " + TargetBallPosSelected);
 
             //this line will run only if the other lines didn't crash
             SmartDashboard.putBoolean("Ready", true);
@@ -498,6 +498,7 @@ public class Robot extends TimedRobot {
             }
         } else {
             //TODO
+            autonInstructions.add(new TurnDeg(90));
         }
     }
 
@@ -604,21 +605,21 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void testPeriodic() {
+        gains.P = SmartDashboard.getNumber("Proportion", gains.P);
+        gains.I = SmartDashboard.getNumber("Integral", gains.I);
+        gains.D = SmartDashboard.getNumber("Derivative", gains.D);
+        rotationGains.P = SmartDashboard.getNumber("rotationProportion", rotationGains.P);
+        rotationGains.I = SmartDashboard.getNumber("rotationIntegral", rotationGains.I);
+        rotationGains.D = SmartDashboard.getNumber("rotationDerivative", rotationGains.D);
     }
 
     public void testInit() {
         SmartDashboard.putNumber("Proportion", gains.P);
         SmartDashboard.putNumber("Integral", gains.I);
         SmartDashboard.putNumber("Derivative", gains.D);
-        gains.P = SmartDashboard.getNumber("Proportion", gains.P);
-        gains.I = SmartDashboard.getNumber("Integral", gains.I);
-        gains.D = SmartDashboard.getNumber("Derivative", gains.D);
         SmartDashboard.putNumber("rotationProportion", rotationGains.P);
         SmartDashboard.putNumber("rotationIntegral", rotationGains.I);
         SmartDashboard.putNumber("rotationDerivative", rotationGains.D);
-        rotationGains.P = SmartDashboard.getNumber("rotationProportion", rotationGains.P);
-        rotationGains.I = SmartDashboard.getNumber("rotationIntegral", rotationGains.I);
-        rotationGains.D = SmartDashboard.getNumber("rotationDerivative", rotationGains.D);
     }
 
     // sets encoder position to zero
