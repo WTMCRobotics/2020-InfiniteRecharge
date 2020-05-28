@@ -629,16 +629,20 @@ public class Robot extends TimedRobot {
         return rightError.value == 0 && leftError.value == 0;
     }
 
-    // move an amount in s straight line
+    /**
+     * move a distance in s straight line
+     * 
+     * @param inches the distance in inches to move forward (use negitive number to go backward)
+     * 
+     * @return true when done
+     */
     public boolean moveInches(double inches) {
         inches = -inches;
         leftMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
         rightMaster.set(ControlMode.MotionMagic, inchesToTicks(inches));
-        if (Math.abs(leftMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(
-                distanceMarginOfError)
+        if (Math.abs(leftMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(distanceMarginOfError)
                 && Math.abs(leftMaster.getActiveTrajectoryVelocity()) < inchesToTicks(1) * 10
-                && Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(
-                        distanceMarginOfError)
+                && Math.abs(rightMaster.getSelectedSensorPosition() - inchesToTicks(inches)) < inchesToTicks(distanceMarginOfError)
                 && Math.abs(rightMaster.getActiveTrajectoryVelocity()) < inchesToTicks(1) * 10) {
             return true;
         } else {

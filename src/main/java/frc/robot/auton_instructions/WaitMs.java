@@ -15,7 +15,6 @@ public class WaitMs extends Instruction {
 
 	@Override
 	public boolean doit(Robot robot) {
-		
 		if (startTime == -1) {
 			System.out.println("waiting " + milliseconds / 1000 + " seconds");
 			startTime = RobotController.getFPGATime() / 1000;
