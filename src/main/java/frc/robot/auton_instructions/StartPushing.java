@@ -6,9 +6,7 @@ import frc.robot.Robot;
 
 public class StartPushing extends Instruction {
 
-    public StartPushing() {
-
-    }
+    public StartPushing() { }
 
     @Override
     public boolean doit(Robot robot) {
