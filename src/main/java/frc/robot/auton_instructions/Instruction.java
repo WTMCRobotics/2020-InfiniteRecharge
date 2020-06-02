@@ -9,7 +9,7 @@ public abstract class Instruction {
 	 * 
 	 * @param robot the current instance of the robot
 	 * 
-	 * @return whether the instruction has bean completed
+	 * @return whether the instruction has been completed
 	 */
 	public abstract boolean doit(Robot robot);
 
