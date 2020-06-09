@@ -18,7 +18,7 @@ public class RatchetMotor extends TwoStateMotor {
 
     // this method should be called in robot periodic
     // checks sensor values and motor speed
-    void tick() {
+    public void tick() {
         
         isDefault = defaultSensor.get();
         isSet = setSensor.get();
@@ -34,7 +34,7 @@ public class RatchetMotor extends TwoStateMotor {
     }
 
     // call this function to change the limit that the motor will go to and stay at
-    void set(boolean set) {
+    public void set(boolean set) {
         if (set && direction != 1) {
             backwardTime = 25;
             direction = 1;
