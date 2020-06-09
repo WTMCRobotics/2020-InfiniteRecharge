@@ -123,7 +123,10 @@ public class Robot extends TimedRobot {
     TalonSRX intake = new TalonSRX(INTAKE_ID);
     TalonSRX popper = new TalonSRX(POPPER_ID);
 
-    static final int encoderRotation = 4096; // the number of ticks in a full rotation
+    /**
+     * the number of ticks in a full rotation
+     */
+    static final int encoderRotation = 4096;
 
     // talon config
     public static final int SLOT_IDX = 0; // Which PID slot to pull gains from
@@ -149,10 +152,19 @@ public class Robot extends TimedRobot {
     // The margin of error for angles when turning in auton
     private static final double angleMarginOfError = 5;
 
-    boolean isPracticeRobot; // true if ROBOT_SENSOR is pulled low
-    double circumference; // this value will be updated with the circumference of the drive wheels
+    /**
+     * true if ROBOT_SENSOR is pulled low
+     */
+    boolean isPracticeRobot;
+    /**
+     * the circumference of the drive wheels
+     */
+    double circumference;
 
-    boolean ArcadeDrive = true; // variable stores weather to use Arcade or tank style controls
+    /**
+     * weather to use Arcade (true) or tank (false) style controls
+     */
+    boolean ArcadeDrive = true;
 
     static final Gains PRACTICE_ROBOT_GAINS = new Gains(0.2, 0.00035, 1.5, 0.2, 0, 1.0);
     static final Gains COMPETITION_ROBOT_GAINS = new Gains(0.075, 0.0, 0.0, 0.2, 0, 1.0);
@@ -622,7 +634,11 @@ public class Robot extends TimedRobot {
         SmartDashboard.putNumber("rotationDerivative", rotationGains.D);
     }
 
-    // sets encoder position to zero
+    /**
+     * sets encoder position to zero
+     * 
+     * @return true if successful and false if error
+     */
     public boolean resetEncoders() {
         ErrorCode rightError = rightMaster.setSelectedSensorPosition(0);
         ErrorCode leftError = leftMaster.setSelectedSensorPosition(0);
@@ -650,7 +666,13 @@ public class Robot extends TimedRobot {
         }
     }
 
-    // converts inches to the value needed by the talon encoder for motion magic
+    /**
+     * converts inches to the value needed by the talon encoder for motion magic
+     * 
+     * @param inches a distance mesured in inches
+     * 
+     * @return the number of encoder ticks equivalent to the input distance
+     */
     double inchesToTicks(double inches) {
         return encoderRotation * inches / circumference;
     }
@@ -659,6 +681,13 @@ public class Robot extends TimedRobot {
         return turnDegs(radians * 180 / Math.PI);
     }
 
+    /**
+     * Turns robot a nuber of degress. Should be called every ticck until it returns true.
+     * 
+     * @param degrees the number of degres to turn
+     * 
+     * @return true if done
+     */
     public boolean turnDegs(double degrees) {
         degrees %= 360;
         if (180 < degrees) {
@@ -699,6 +728,13 @@ public class Robot extends TimedRobot {
         }
     } // END of UpdateCompressor() functionom
 
+
+    /**
+     * sets a pneumatic piston to be extended or retracted
+     * 
+     * @param solenoid the Solenoid or DoubleSolenoid to be extended or retracted
+     * @param value whether the solenoid should be extended
+     */
     public void setPistonExtended(SolenoidBase solenoid, boolean value) {
         if (solenoid instanceof Solenoid) {
             ((Solenoid) solenoid).set(value);

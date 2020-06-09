@@ -6,6 +6,9 @@ public class TurnDeg extends Instruction {
 
 	double degrees;
 
+	/**
+	 * @param degrees the number of degres to turn
+	 */
 	public TurnDeg(double degrees) {
 		this.degrees = degrees;
 	}

@@ -4,6 +4,9 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 
 import frc.robot.Robot;
 
+/**
+ * sets the robot pushing lightly forward to keep it on the wall while dumping powercells
+ */
 public class StartPushing extends Instruction {
 
     public StartPushing() { }

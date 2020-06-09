@@ -8,6 +8,10 @@ public class SetPistonExtended extends Instruction {
 	boolean value;
 	SolenoidBase solenoid;
 
+	/**
+     * @param solenoid the Solenoid or DoubleSolenoid to be extended or retracted
+     * @param value whether the solenoid should be extended
+     */
 	public SetPistonExtended(SolenoidBase solenoid, boolean value) {
 		this.solenoid = solenoid;
 		this.value = value;
