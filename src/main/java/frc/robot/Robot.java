@@ -131,7 +131,7 @@ public class Robot extends TimedRobot {
     // talon config
     public static final int SLOT_IDX = 0; // Which PID slot to pull gains from
     public static final int PID_LOOP_IDX = 0; // Which PID loop to pull gains from
-    public static final int TIMEOUT_MS = 30; // amount of time in ms to wait for conformation
+    public static final int TIMEOUT_MS = 30; // amount of time in ms to wait for confirmation
 
     // ##########################################
     // drivetrain and pid related constants and variables
@@ -191,10 +191,10 @@ public class Robot extends TimedRobot {
     int popperInTime = 0;
     int popperOutTime = 0;
 
-    int popperCounterTime; // the number of cycles that the counter sensor has bean interuped for
-    static final int INTAKE_COUNTER_COUNT_TIME = 3; // the number of cycles that a ball interupes the sensor for when passing                                                    
-    int intakeTime; // the number of cycles that the counter sensor has bean interuped for
-    static final int POPPER_COUNTER_JAM_TIME = 20; // the number of cycles that contitutes a popper jam
+    int popperCounterTime; // the number of cycles that the counter sensor has been interrupted for
+    static final int INTAKE_COUNTER_COUNT_TIME = 3; // the number of cycles that a ball interruptes the sensor for when passing                                                    
+    int intakeTime; // the number of cycles that the counter sensor has bean interrupted for
+    static final int POPPER_COUNTER_JAM_TIME = 20; // the number of cycles that constitutes a popper jam
     int ballsStored = 0; // the number of balls in the robot
 
     // ##########################################
@@ -241,8 +241,8 @@ public class Robot extends TimedRobot {
 
     static final int PCM_RATCHET = 2;
 
-    boolean extended = false;
-    boolean retracted = true;
+    boolean extended = false; //TODO figure out what this is for and comment it
+    boolean retracted = true; //TODO figure out what this is for and comment it
 
     Compressor compressor = new Compressor(1);
 
