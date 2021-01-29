@@ -11,5 +11,9 @@
     "**/.project": true,
     "**/.settings": true,
     "**/.factorypath": true
-  }
+  },
+  "cSpell.words": [
+    "auton",
+    "teleop"
+  ]
 }

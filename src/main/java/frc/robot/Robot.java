@@ -61,13 +61,13 @@ public class Robot extends TimedRobot {
 
     // SendableChooser<String> puts a dropdown menu on the dashboard
     private final SendableChooser<Integer> STARTING_POS_CHOOSER = new SendableChooser<>();
-    private int startingPosSelected; // the auton mode chossen by the dashboard
+    private int startingPosSelected; // the auton mode chosen by the dashboard
     // SendableChooser<String> puts a dropdown menu on the dashboard
     private final SendableChooser<Boolean> GO_DIRECTLY_CHOOSER = new SendableChooser<>();
-    private boolean goDirectlyPosSelected; // the auton mode chossen by the dashboard
+    private boolean goDirectlyPosSelected; // the auton mode chosen by the dashboard
     // SendableChooser<String> puts a dropdown menu on the dashboard
     private final SendableChooser<Integer> TARGET_BALL_POS_CHOOSER = new SendableChooser<>();
-    private int TargetBallPosSelected; // the auton mode chossen by the dashboard
+    private int TargetBallPosSelected; // the auton mode chosen by the dashboard
 
     boolean shouldGoDirectlyToScore = true;
 
@@ -87,7 +87,7 @@ public class Robot extends TimedRobot {
     static final int ROBOT_SENSOR_ID = 9; // this should be pulled low on the 2016 Practice Robot
     static final int HANG_SET_SENSOR_ID = 0; // sensor for when the winch is extended
     static final int HANG_DEFAULT_SENSOR_ID = 1; // sensor for when the winch is retracted
-    static final int INTAKE_SENSOR_ID = 2; // sensor for when a ball is waitung to be popped up
+    static final int INTAKE_SENSOR_ID = 2; // sensor for when a ball is waiting to be popped up
     static final int INTAKE_COUNTER_SENSOR_ID = 3; // sensor for counting balls
 
     // Binary Sensors
@@ -97,7 +97,7 @@ public class Robot extends TimedRobot {
                                                                                       // extended
     static final DigitalInput HANG_DEFAULT_SENSOR = new DigitalInput(HANG_DEFAULT_SENSOR_ID); // sensor for when the
                                                                                               // winch is retracted
-    static final DigitalInput INTAKE_SENSOR = new DigitalInput(INTAKE_SENSOR_ID); // sensor for when a ball is waitung
+    static final DigitalInput INTAKE_SENSOR = new DigitalInput(INTAKE_SENSOR_ID); // sensor for when a ball is waiting
                                                                                   // to be popped up
     static final DigitalInput POPPER_SENSOR = new DigitalInput(INTAKE_COUNTER_SENSOR_ID); // sensor for counting balls
 
@@ -137,7 +137,7 @@ public class Robot extends TimedRobot {
     // drivetrain and pid related constants and variables
     // ##########################################
 
-    // the obect that is the navX-MXP
+    // the object that is the navX-MXP
     public AHRS gyro = new AHRS(Port.kMXP);
     static final Gains PRACTICE_ROTATION_GAINS = new Gains(0.004, 0.003, 0.001, 0.0, 0, 0.0);
     static final Gains COMPETITION_ROTATION_GAINS = new Gains(0.04, 0.003, 0.001, 0.0, 0, 0.0);
@@ -168,7 +168,7 @@ public class Robot extends TimedRobot {
 
     static final Gains PRACTICE_ROBOT_GAINS = new Gains(0.2, 0.00035, 1.5, 0.2, 0, 1.0);
     static final Gains COMPETITION_ROBOT_GAINS = new Gains(0.075, 0.0, 0.0, 0.2, 0, 1.0);
-    static Gains gains; // used for drivetran motion magic when moving and is ste to
+    static Gains gains; // used for drivetrain motion magic when moving and is ste to
                         // PRACTICE_ROBOT_GAINS or COMPETITION_ROBOT_GAINS
 
     // ##########################################
@@ -226,7 +226,7 @@ public class Robot extends TimedRobot {
     boolean arcadeButton; // true if the button that selects arcade mode is pressed
     boolean tankButton; // true if the button that selects tank mode is pressed
     boolean drawbridgeButton; // true if the button that lowers the drawbridge is pressed
-    boolean hangButton; // true if the button that extends the hang mecanism is pressed
+    boolean hangButton; // true if the button that extends the hang mechanism is pressed
     boolean intakeInButton; // true if the button that intakes is pressed
     boolean intakeOutButton; // true if the button that runs the intake in reverse is pressed
     boolean popperInButton; // true if the button that runs the popper is pressed
@@ -271,19 +271,19 @@ public class Robot extends TimedRobot {
         TARGET_BALL_POS_CHOOSER.addOption("Loading Zone", LOADING_ZONE);
         SmartDashboard.putData("Target Ball Position", TARGET_BALL_POS_CHOOSER);
 
-        System.out.println("this is to test the drbug console and robotInit()");
+        System.out.println("this is to test the debug console and robotInit()");
 
         isPracticeRobot = !ROBOT_SENSOR.get();
         if (isPracticeRobot) {
             circumference = 6 * Math.PI;
             gains = PRACTICE_ROBOT_GAINS;
             rotationGains = PRACTICE_ROTATION_GAINS;
-            System.out.println("using 6 inch weels");
+            System.out.println("using 6 inch wheels");
         } else {
             circumference = 8 * Math.PI;
             gains = COMPETITION_ROBOT_GAINS;
             rotationGains = COMPETITION_ROTATION_GAINS;
-            System.out.println("using 8 inch weels");
+            System.out.println("using 8 inch wheels");
         }
 
         rotationPID = new ProfiledPIDController(rotationGains.P, rotationGains.I, rotationGains.D, ROTATIONAL_GAIN_CONSTRAINTS);
@@ -308,7 +308,7 @@ public class Robot extends TimedRobot {
         /* Ensure motor output is neutral during init */
         talon.set(ControlMode.PercentOutput, 0);
 
-        /* Factory Default all hardware to prevent unexpected behaviour */
+        /* Factory Default all hardware to prevent unexpected behavior */
         talon.configFactoryDefault();
 
         /* Set Neutral mode */
@@ -322,7 +322,7 @@ public class Robot extends TimedRobot {
         /* Factory default hardware to prevent unexpected behavior */
         masterTalon.configFactoryDefault();
 
-        /* Configure Sensor Source for Pirmary PID */
+        /* Configure Sensor Source for Primary PID */
         masterTalon.configSelectedFeedbackSensor(FeedbackDevice.CTRE_MagEncoder_Relative, PID_LOOP_IDX, TIMEOUT_MS);
 
         /*
@@ -331,8 +331,8 @@ public class Robot extends TimedRobot {
         masterTalon.configNeutralDeadband(0.001, TIMEOUT_MS);
 
         /**
-         * Configure Talon SRX Output and Sesnor direction accordingly Invert Motor to
-         * have green LEDs when driving Talon Forward / Requesting Postiive Output Phase
+         * Configure Talon SRX Output and Sensor direction accordingly Invert Motor to
+         * have green LEDs when driving Talon Forward / Requesting Positive Output Phase
          * sensor to have positive increment when driving Talon Forward (Green LED)
          */
         masterTalon.setSensorPhase(false);
@@ -430,7 +430,7 @@ public class Robot extends TimedRobot {
                     autonInstructions.add(new TurnDeg(90));
                     autonInstructions.add(new MoveInch(120));
                 case TARGET_ZONE_AUTON_POS:
-                    //start with back bumper on initiation line facing torwards the middle of the target zone
+                    //start with back bumper on initiation line facing towards the middle of the target zone
                     autonInstructions.add(new MoveInch(-38));
                     autonInstructions.add(new MoveInch(120));
                 case LEFT_AUTON_POS:
@@ -442,7 +442,7 @@ public class Robot extends TimedRobot {
                     autonInstructions.add(new MoveInch(130));
                     break;
                 default:
-                    // this case shouldnt happen because of the if statment above
+                    // this case shouldn't happen because of the if statement above
                     break;
                 }
                 autonInstructions.add(new StartPushing());
@@ -544,7 +544,7 @@ public class Robot extends TimedRobot {
     public void teleopPeriodic() {
 
         // this code updates the controller variables to the correct value at the
-        // begining of teleopPeriodic()
+        // beginning of teleopPeriodic()
         leftjoyY = xboxController.getY(GenericHID.Hand.kLeft);
         rightjoyY = xboxController.getY(GenericHID.Hand.kRight);
         leftjoyX = xboxController.getX(GenericHID.Hand.kLeft);
@@ -648,7 +648,7 @@ public class Robot extends TimedRobot {
     /**
      * move a distance in s straight line
      * 
-     * @param inches the distance in inches to move forward (use negitive number to go backward)
+     * @param inches the distance in inches to move forward (use negative number to go backward)
      * 
      * @return true when done
      */
@@ -669,7 +669,7 @@ public class Robot extends TimedRobot {
     /**
      * converts inches to the value needed by the talon encoder for motion magic
      * 
-     * @param inches a distance mesured in inches
+     * @param inches a distance measured in inches
      * 
      * @return the number of encoder ticks equivalent to the input distance
      */
@@ -682,7 +682,7 @@ public class Robot extends TimedRobot {
     }
 
     /**
-     * Turns robot a nuber of degress. Should be called every ticck until it returns true.
+     * Turns robot a number of degrees. Should be called every tick until it returns true.
      * 
      * @param degrees the number of degres to turn
      * 
@@ -726,7 +726,7 @@ public class Robot extends TimedRobot {
             // Stop compressor
             compressor.stop();
         }
-    } // END of UpdateCompressor() functionom
+    } // END of UpdateCompressor() function
 
 
     /**
@@ -749,7 +749,7 @@ public class Robot extends TimedRobot {
     }
 
     // this code is called from auton and teleop periodic and uses sensors to
-    // automaticly handel the popper
+    // automatically handel the popper
     void handlePopper(boolean shoudSetPopper) {
         // if a ball is ready to be popped
         if (!INTAKE_SENSOR.get()) {
